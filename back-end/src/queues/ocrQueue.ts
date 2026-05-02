@@ -2,6 +2,7 @@ import { Queue, Worker, Job } from 'bullmq';
 import fs from 'fs';
 import ocrService from '../services/OcrService';
 import newsGeneratorService from '../services/NewsGeneratorService';
+import draftService from '../services/DraftService';
 import logger from '../utils/logger';
 import redisClient from '../utils/redisClient';
 
@@ -32,6 +33,7 @@ export interface OcrJobData {
   filePath: string;
   mimetype: string;
   originalName: string;
+  userId: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,17 +58,21 @@ export const ocrWorker = new Worker<OcrJobData>(
       // 3. Generate JSON via Llama
       const articleJson = await newsGeneratorService.generateNewsFromOcr(text);
 
+      await job.updateProgress(80);
+
+      // 4. Save draft to Database (include imagePath)
+      const draft = await draftService.createDraft(job.data.userId, text, articleJson, filePath);
+
       await job.updateProgress(90);
 
-      // 4. Cleanup temp file
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      // Note: We do not unlink the file on success. The file will be kept for WhatsApp media attachment,
+      // and cleaned up by the daily cron job after 24h.
 
       await job.updateProgress(100);
-      logger.info(`[ocr-worker]: Completed job ${job.id} successfully.`);
+      logger.info(`[ocr-worker]: Completed job ${job.id} successfully. Draft ID: ${draft.id}`);
 
       return {
+        draftId: draft.id,
         originalName,
         confidence,
         article: articleJson,

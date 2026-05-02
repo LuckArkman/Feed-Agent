@@ -11,10 +11,15 @@ import authRoutes from './routes/auth.routes';
 import contactsRoutes from './routes/contacts.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
 import newsRoutes from './routes/news.routes';
+import draftRoutes from './routes/draft.routes';
+import analyticsRoutes from './routes/analytics.routes';
 import whatsAppService from './services/WhatsAppService';
+import feedHistoryService from './services/FeedHistoryService';
+import { initCronJobs } from './crons/cleanupCron';
 
 // Initialize BullMQ Workers
 import './queues/ocrQueue';
+import './queues/broadcastQueue';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Global Process Error Guards — must be the first listeners registered
@@ -70,6 +75,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/drafts', draftRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Global Error Handler — MUST be the last middleware
@@ -96,6 +103,15 @@ async function startServer() {
       whatsAppService.initialize().catch((err: Error) => {
         logger.error(`[whatsapp]: Failed to initialize: ${err.message}`, { stack: err.stack });
       });
+
+      // Listen for message receipts (Sprint 36)
+      whatsAppService.on('message:status', async ({ messageId, status }) => {
+        await feedHistoryService.updateStatusByMessageId(messageId, status);
+        logger.info(`[whatsapp-webhook]: Message ${messageId} status updated to ${status}`);
+      });
+
+      // Initialize Data Cleanup CRON jobs (Sprint 39)
+      initCronJobs();
     });
   } catch (error: unknown) {
     const err = error as Error;

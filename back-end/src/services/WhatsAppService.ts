@@ -40,11 +40,13 @@ export declare interface WhatsAppService {
   emit(event: 'wa:open'):                            boolean;
   emit(event: 'wa:close',      reason?: number):     boolean;
   emit(event: 'wa:qr:timeout'):                      boolean;
+  emit(event: 'message:status', payload: { messageId: string, status: 'delivered' | 'read' }): boolean;
 
   on(event: 'wa:qr',         listener: (qrBase64: string)  => void): this;
   on(event: 'wa:open',       listener: ()                  => void): this;
   on(event: 'wa:close',      listener: (reason?: number)   => void): this;
   on(event: 'wa:qr:timeout', listener: ()                  => void): this;
+  on(event: 'message:status', listener: (payload: { messageId: string, status: 'delivered' | 'read' }) => void): this;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -125,7 +127,7 @@ export class WhatsAppService extends EventEmitter {
    * @param text        - The text message content to send.
    * @param delayMs     - Optional artificial delay before sending (default: 1500ms).
    */
-  async sendMessage(phoneNumber: string, text: string, delayMs = 1500): Promise<void> {
+  async sendMessage(phoneNumber: string, text: string, delayMs = 1500, imagePath?: string): Promise<string> {
     if (!this.socket || this.status.state !== WaConnectionState.OPEN) {
       throw new Boom('WhatsApp is not connected.', { statusCode: 503 });
     }
@@ -142,11 +144,21 @@ export class WhatsAppService extends EventEmitter {
     // 3. Artificial delay (configurable, helps prevent spam detection)
     await delay(delayMs);
 
-    // 4. Send the actual message and clear typing status
+    // 4. Send the actual message (with optional image) and clear typing status
     await this.socket.sendPresenceUpdate('paused', jid);
-    await this.socket.sendMessage(jid, { text });
+    
+    let sentMsg;
+    if (imagePath && fs.existsSync(imagePath)) {
+      sentMsg = await this.socket.sendMessage(jid, { 
+        image: fs.readFileSync(imagePath), 
+        caption: text 
+      });
+    } else {
+      sentMsg = await this.socket.sendMessage(jid, { text });
+    }
 
     logger.info(`[whatsapp]: Message sent successfully to ${jid}`);
+    return sentMsg?.key?.id || '';
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────
@@ -231,6 +243,25 @@ export class WhatsAppService extends EventEmitter {
           logger.warn(`[whatsapp]: Connection closed. Reason code: ${reason}. Reconnecting in 5s...`);
           this.emit('wa:close', reason);
           setTimeout(() => this.initialize(), 5_000);
+        }
+      }
+    });
+
+    // Handle message receipts (delivered / read)
+    this.socket.ev.on('messages.update', async (updates) => {
+      for (const update of updates) {
+        if (update.update.status) {
+          const messageId = update.key.id;
+          const statusInt = update.update.status;
+          
+          let strStatus: 'delivered' | 'read' | null = null;
+          // Baileys status codes: 3 = SERVER_ACK/DELIVERY_ACK, 4 = READ
+          if (statusInt === 3) strStatus = 'delivered';
+          if (statusInt === 4) strStatus = 'read';
+
+          if (messageId && strStatus) {
+            this.emit('message:status', { messageId, status: strStatus });
+          }
         }
       }
     });

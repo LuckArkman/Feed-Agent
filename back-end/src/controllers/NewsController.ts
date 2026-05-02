@@ -4,6 +4,7 @@ import { AppError } from '../utils/AppError';
 import { ocrQueue, OCR_QUEUE_NAME } from '../queues/ocrQueue';
 import ocrService from '../services/OcrService';
 import newsGeneratorService from '../services/NewsGeneratorService';
+import draftService from '../services/DraftService';
 import { Job } from 'bullmq';
 import logger from '../utils/logger';
 import fs from 'fs';
@@ -25,6 +26,7 @@ export class NewsController {
         filePath: req.file.path,
         mimetype: req.file.mimetype,
         originalName: req.file.originalname,
+        userId: req.user!.userId, // Pass user ID to worker for draft persistence
       });
 
       const payload = {
@@ -123,14 +125,16 @@ export class NewsController {
       // 2. Generate JSON via Llama
       const articleJson = await newsGeneratorService.generateNewsFromOcr(text);
 
-      // 3. Cleanup temp file
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
+      // 3. Save draft to Database (include imagePath)
+      const draft = await draftService.createDraft(req.user!.userId, text, articleJson, req.file.path);
+
+      // 4. Note: We no longer delete the temp file here because it might be sent via WhatsApp.
+      // The daily cron job will clean up old files after 24h.
 
       const processingTimeMs = Date.now() - startTime;
 
       const payload = {
+        draftId: draft.id,
         originalName: req.file.originalname,
         confidence: Number(confidence.toFixed(2)),
         processingTimeMs,

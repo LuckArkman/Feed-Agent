@@ -8,6 +8,7 @@ export interface IFeedHistory extends Document {
   status: 'pending' | 'sent' | 'failed' | 'delivered' | 'read';
   timestamp: Date;
   errorDetails?: string;
+  messageId?: string;
 }
 
 const FeedHistorySchema: Schema = new Schema({
@@ -21,7 +22,8 @@ const FeedHistorySchema: Schema = new Schema({
     default: 'pending' 
   },
   timestamp: { type: Date, default: Date.now, index: true },
-  errorDetails: { type: String, required: false }
+  errorDetails: { type: String, required: false },
+  messageId: { type: String, required: false, index: true }
 }, {
   timestamps: true // adds createdAt and updatedAt
 });
