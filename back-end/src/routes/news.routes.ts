@@ -2,6 +2,7 @@ import { Router } from 'express';
 import newsController from '../controllers/NewsController';
 import { uploadNewsSource } from '../middlewares/uploadMiddleware';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { aiProcessingLimiter } from '../middlewares/rateLimiter';
 
 const router = Router();
 
@@ -47,7 +48,7 @@ router.use(authMiddleware);
  *       415:
  *         description: Invalid file type.
  */
-router.post('/upload', uploadNewsSource, newsController.uploadSource.bind(newsController));
+router.post('/upload', aiProcessingLimiter, uploadNewsSource, newsController.uploadSource.bind(newsController));
 
 /**
  * @openapi
@@ -100,6 +101,6 @@ router.get('/job/:jobId/stream', newsController.streamJobStatus.bind(newsControl
  *       422:
  *         description: Image is unreadable or OCR confidence is below 60%.
  */
-router.post('/generate-draft', uploadNewsSource, newsController.generateDraft.bind(newsController));
+router.post('/generate-draft', aiProcessingLimiter, uploadNewsSource, newsController.generateDraft.bind(newsController));
 
 export default router;

@@ -1,0 +1,1082 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  RefreshCw, 
+  Send, 
+  Play, 
+  Pause, 
+  Clock, 
+  CheckCircle2, 
+  AlertCircle, 
+  Sliders, 
+  Smartphone, 
+  Layers, 
+  Server, 
+  Activity, 
+  ShieldAlert,
+  FastForward,
+  ListFilter,
+  Ban,
+  CheckCircle,
+  TrendingUp,
+  Terminal,
+  Trash2,
+  Download,
+  History,
+  FileSpreadsheet,
+  RotateCcw,
+  HelpCircle,
+  Zap
+} from 'lucide-react';
+import { Button } from '@/components/Button';
+import { Badge } from '@/components/Badge';
+import { showToast } from '@/utils/toastHelper';
+
+interface QueueJob {
+  id: string;
+  recipientName: string;
+  recipientPhone: string;
+  messageSnippet: string;
+  status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  attempts: number;
+  timestamp: string;
+  error?: string;
+  errorDescription?: string;
+}
+
+interface SseLogItem {
+  id: string;
+  timestamp: string;
+  type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
+  message: string;
+}
+
+interface HistoricalBatch {
+  id: string;
+  date: string;
+  title: string;
+  totalContacts: number;
+  successRate: string;
+  deliveredCount: number;
+  duration: string;
+  status: 'COMPLETED' | 'WARNING';
+}
+
+const INITIAL_JOBS: QueueJob[] = [
+  {
+    id: 'job-501',
+    recipientName: 'Mário Lopes',
+    recipientPhone: '+55 11 98888-7777',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'COMPLETED',
+    attempts: 1,
+    timestamp: '14:52:10',
+  },
+  {
+    id: 'job-502',
+    recipientName: 'Ana Oliveira',
+    recipientPhone: '+55 11 97777-6666',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'COMPLETED',
+    attempts: 1,
+    timestamp: '14:52:14',
+  },
+  {
+    id: 'job-503',
+    recipientName: 'Carlos Santos',
+    recipientPhone: '+55 11 96666-5555',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'COMPLETED',
+    attempts: 1,
+    timestamp: '14:52:18',
+  },
+  {
+    id: 'job-504',
+    recipientName: 'Beatriz Souza',
+    recipientPhone: '+55 11 95555-4444',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'PROCESSING',
+    attempts: 1,
+    timestamp: '14:52:22',
+  },
+  {
+    id: 'job-505',
+    recipientName: 'Fernando Costa',
+    recipientPhone: '+55 11 94444-3333',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'QUEUED',
+    attempts: 0,
+    timestamp: 'Fila BullMQ',
+  },
+  {
+    id: 'job-506',
+    recipientName: 'Mariana Lima',
+    recipientPhone: '+55 11 93333-2222',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'QUEUED',
+    attempts: 0,
+    timestamp: 'Fila BullMQ',
+  },
+  {
+    id: 'job-507',
+    recipientName: 'Roberto Almeida',
+    recipientPhone: '+55 11 92222-1111',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'FAILED',
+    attempts: 2,
+    timestamp: '14:50:05',
+    error: 'ERR_TIMEOUT_WHATSAPP_API',
+    errorDescription: 'O servidor Meta Graph demorou para confirmar o recibo. Possível instabilidade temporária na rota.',
+  },
+  {
+    id: 'job-508',
+    recipientName: 'Juliana Ribeiro',
+    recipientPhone: '+55 11 91111-0000',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'FAILED',
+    attempts: 3,
+    timestamp: '14:51:12',
+    error: 'ERR_RATE_LIMIT_EXCEEDED',
+    errorDescription: 'Limite de tráfego Meta Business atingido para a janela de 1 minuto. Recomenda-se aumentar o delay antispam.',
+  },
+  {
+    id: 'job-509',
+    recipientName: 'Lucas Moura',
+    recipientPhone: '+55 11 90000-9999',
+    messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+    status: 'FAILED',
+    attempts: 1,
+    timestamp: '14:51:50',
+    error: 'ERR_INVALID_PHONE_NUMBER',
+    errorDescription: 'O número de destino não possui registro ativo de WhatsApp ou a formatação DDI/DDD é inválida.',
+  },
+];
+
+const INITIAL_LOGS: SseLogItem[] = [
+  { id: 'log-1', timestamp: '14:50:01', type: 'INFO', message: 'Conexão SSE estabelecida com cluster Redis (BullMQ v5.12).' },
+  { id: 'log-2', timestamp: '14:50:02', type: 'INFO', message: 'Carregando pauta ativa: "Alta dos combustíveis impacta mercado imobiliário".' },
+  { id: 'log-3', timestamp: '14:50:05', type: 'WARNING', message: 'Rate-limit tracking ativado. Delay configurado: 3.5s entre disparos.' },
+  { id: 'log-4', timestamp: '14:52:10', type: 'SUCCESS', message: 'Pacote entregue com sucesso para Mário Lopes (+55 11 98888-7777). ID Meta: wamid.HBgL.' },
+  { id: 'log-5', timestamp: '14:52:14', type: 'SUCCESS', message: 'Pacote entregue com sucesso para Ana Oliveira (+55 11 97777-6666). ID Meta: wamid.HBgM.' },
+  { id: 'log-6', timestamp: '14:52:18', type: 'SUCCESS', message: 'Pacote entregue com sucesso para Carlos Santos (+55 11 96666-5555). ID Meta: wamid.HBgN.' },
+  { id: 'log-7', timestamp: '14:52:22', type: 'INFO', message: 'Processando job #504 (Beatriz Souza) na fila do worker principal...' },
+];
+
+const INITIAL_HISTORICAL: HistoricalBatch[] = [
+  {
+    id: 'batch-hist-1',
+    date: '10/05/2026',
+    title: 'Aumento Diesel Impacta Tabela de Fretes',
+    totalContacts: 120,
+    successRate: '98%',
+    deliveredCount: 118,
+    duration: '7m 12s',
+    status: 'COMPLETED'
+  },
+  {
+    id: 'batch-hist-2',
+    date: '08/05/2026',
+    title: 'Taxa Selic Mantida pelo Copom - Boletim Focus',
+    totalContacts: 150,
+    successRate: '100%',
+    deliveredCount: 150,
+    duration: '9m 05s',
+    status: 'COMPLETED'
+  },
+  {
+    id: 'batch-hist-3',
+    date: '03/05/2026',
+    title: 'Alerta de Geada Extrema no Sul e Sudeste',
+    totalContacts: 210,
+    successRate: '95%',
+    deliveredCount: 200,
+    duration: '12m 40s',
+    status: 'WARNING'
+  },
+  {
+    id: 'batch-hist-4',
+    date: '28/04/2026',
+    title: 'Fechamento de Câmbio: Dólar atinge R$ 5,35',
+    totalContacts: 185,
+    successRate: '99%',
+    deliveredCount: 183,
+    duration: '10m 50s',
+    status: 'COMPLETED'
+  }
+];
+
+export const BroadcastQueue: React.FC = () => {
+  const [jobs, setJobs] = useState<QueueJob[]>(INITIAL_JOBS);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+
+  // Launch Configuration State
+  const [delaySeconds, setDelaySeconds] = useState<number>(3.5);
+  const [adminTestPhone, setAdminTestPhone] = useState<string>('+55 11 99999-8888');
+  const [isTestFiring, setIsTestFiring] = useState<boolean>(false);
+  const [isLaunchingBatch, setIsLaunchingBatch] = useState<boolean>(false);
+  const [activeContactsCount, setActiveContactsCount] = useState<number>(125);
+  const [isQueuePaused, setIsQueuePaused] = useState<boolean>(false);
+
+  // SSE Terminal Logs State
+  const [logs, setLogs] = useState<SseLogItem[]>(INITIAL_LOGS);
+  const [autoScroll, setAutoScroll] = useState<boolean>(true);
+  const terminalBottomRef = useRef<HTMLDivElement | null>(null);
+
+  // Historical Batches State
+  const [historicalBatches] = useState<HistoricalBatch[]>(INITIAL_HISTORICAL);
+  const [isExportingCsvId, setIsExportingCsvId] = useState<string | null>(null);
+
+  // Sprint 40: Retrying State
+  const [retryingJobId, setRetryingJobId] = useState<string | null>(null);
+  const [isRetryingAll, setIsRetryingAll] = useState<boolean>(false);
+
+  // Dynamic calculation for estimated total transmission time
+  const totalEstimatedSeconds = activeContactsCount * delaySeconds;
+  const estimatedMinutes = Math.floor(totalEstimatedSeconds / 60);
+  const estimatedRemainderSeconds = Math.round(totalEstimatedSeconds % 60);
+
+  // Auto-scroll logic
+  useEffect(() => {
+    if (autoScroll && terminalBottomRef.current) {
+      terminalBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs, autoScroll]);
+
+  // Simulation interval for processing queue
+  useEffect(() => {
+    if (isQueuePaused) return;
+
+    const timer = setInterval(() => {
+      const currentTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      setJobs(prev => {
+        const queuedJobs = prev.filter(j => j.status === 'QUEUED');
+        if (queuedJobs.length === 0) return prev;
+
+        const nextJob = queuedJobs[0];
+
+        setLogs(prevLogs => {
+          const newLog: SseLogItem = {
+            id: `log-${Date.now()}-1`,
+            timestamp: currentTime,
+            type: 'INFO',
+            message: `[BULLMQ] Consumindo job #${nextJob.id} -> Destinatário: ${nextJob.recipientName} (${nextJob.recipientPhone})`,
+          };
+          return [...prevLogs.slice(-499), newLog];
+        });
+
+        return prev.map(j => {
+          if (j.id === nextJob.id) {
+            return { ...j, status: 'PROCESSING', timestamp: currentTime };
+          }
+          if (j.status === 'PROCESSING') {
+            const isSuccess = Math.random() > 0.15;
+            
+            setLogs(prevLogs => {
+              const resLog: SseLogItem = {
+                id: `log-${Date.now()}-2`,
+                timestamp: currentTime,
+                type: isSuccess ? 'SUCCESS' : 'ERROR',
+                message: isSuccess 
+                  ? `[SUCCESS] Confirmação de entrega Meta Graph API para ${j.recipientName} (${j.recipientPhone}). WAMID: wamid.${Math.random().toString(36).substring(2, 8)}`
+                  : `[ERROR] Falha de rate-limit ou timeout no envio para ${j.recipientName}. Retentativa programada (Attempt ${j.attempts + 1}/3).`,
+              };
+              return [...prevLogs.slice(-499), resLog];
+            });
+
+            const errorCodes = ['ERR_TIMEOUT_WHATSAPP_API', 'ERR_RATE_LIMIT_EXCEEDED', 'ERR_INVALID_PHONE_NUMBER'];
+            const randomErr = errorCodes[Math.floor(Math.random() * errorCodes.length)];
+            const errorDesc = randomErr === 'ERR_TIMEOUT_WHATSAPP_API' 
+              ? 'O servidor Meta Graph demorou para confirmar o recibo. Possível instabilidade temporária na rota.'
+              : randomErr === 'ERR_RATE_LIMIT_EXCEEDED'
+              ? 'Limite de tráfego Meta Business atingido para a janela de 1 minuto. Recomenda-se aumentar o delay antispam.'
+              : 'O número de destino não possui registro ativo de WhatsApp ou a formatação DDI/DDD é inválida.';
+
+            return {
+              ...j,
+              status: isSuccess ? 'COMPLETED' : 'FAILED',
+              error: isSuccess ? undefined : randomErr,
+              errorDescription: isSuccess ? undefined : errorDesc,
+              attempts: j.attempts + 1,
+            };
+          }
+          return j;
+        });
+      });
+    }, delaySeconds * 1000);
+
+    return () => clearInterval(timer);
+  }, [isQueuePaused, delaySeconds]);
+
+  const triggerRefresh = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      showToast.success('Fila sincronizada com o cluster Redis (BullMQ).');
+    }, 1200);
+  };
+
+  const handleFireTestMessage = () => {
+    if (!adminTestPhone.trim()) {
+      showToast.error('Informe o telefone do administrador para receber o teste.');
+      return;
+    }
+    setIsTestFiring(true);
+    showToast.info(`Disparando pacote de teste prévio para ${adminTestPhone}...`);
+
+    setTimeout(() => {
+      setIsTestFiring(false);
+      showToast.success(`📱 Disparo de Teste concluído com sucesso! Verifique o WhatsApp no aparelho ${adminTestPhone}.`);
+    }, 1500);
+  };
+
+  const handleLaunchMassBatch = () => {
+    setIsLaunchingBatch(true);
+    showToast.info('Inicializando esteira de transmissão em lote com delay configurado...');
+
+    setTimeout(() => {
+      setIsLaunchingBatch(false);
+      showToast.success(`🚀 Lote lançado com sucesso! Injetando ${activeContactsCount} mensagens na fila com intervalo de ${delaySeconds}s.`);
+      
+      const newBatchJobs: QueueJob[] = Array.from({ length: 12 }).map((_, i) => ({
+        id: `batch-${Date.now()}-${i}`,
+        recipientName: `Contato Segmentado #${i + 1}`,
+        recipientPhone: `+55 11 91111-${1000 + i}`,
+        messageSnippet: '📢 ALERTA DE MERCADO: Alta dos Combustíveis! ⛽ Ocorreu um aumento de 5%...',
+        status: 'QUEUED',
+        attempts: 0,
+        timestamp: 'Fila BullMQ',
+      }));
+
+      setJobs(prev => [...newBatchJobs, ...prev]);
+      setIsQueuePaused(false);
+    }, 1800);
+  };
+
+  const handleTogglePauseQueue = () => {
+    setIsQueuePaused(prev => {
+      const nextState = !prev;
+      if (nextState) {
+        showToast.info('⏸️ Fila de transmissão pausada. Novos disparos retidos no Redis.');
+      } else {
+        showToast.success('▶️ Fila retomada. Processando jobs com delay configurado.');
+      }
+      return nextState;
+    });
+  };
+
+  const handleCancelActiveBroadcast = () => {
+    setJobs(prev => prev.map(j => (j.status === 'QUEUED' || j.status === 'PROCESSING') ? { ...j, status: 'CANCELLED', error: 'ABORTED_BY_ADMIN' } : j));
+    showToast.info('🛑 Transmissão cancelada! Todos os jobs pendentes foram abortados na fila do Redis.');
+    setIsQueuePaused(true);
+  };
+
+  const handlePurgeFailedJobs = () => {
+    setJobs(prev => prev.filter(j => j.status !== 'FAILED' && j.status !== 'CANCELLED'));
+    showToast.success('Jobs com falha ou cancelados foram limpos da fila de visualização.');
+  };
+
+  const handleClearLogsConsole = () => {
+    setLogs([]);
+    showToast.info('Console de logs do servidor limpo.');
+  };
+
+  const handleDownloadBatchCsv = (batch: HistoricalBatch) => {
+    setIsExportingCsvId(batch.id);
+    showToast.info(`Gerando relatório analítico CSV para "${batch.title}"...`);
+
+    setTimeout(() => {
+      setIsExportingCsvId(null);
+      const csvHeaders = "ID,Nome do Contato,Telefone,Status de Entrega,Data de Envio,ID Meta Graph\n";
+      const sampleRows = Array.from({ length: batch.deliveredCount }).map((_, i) => (
+        `"contato-${i+1}","Contato Segmentado #${i+1}","+55 11 9${Math.floor(10000000 + Math.random() * 90000000)}","ENTREGUE","${batch.date}","wamid.${Math.random().toString(36).substring(2, 10)}"`
+      )).join("\n");
+
+      const blob = new Blob([csvHeaders + sampleRows], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `relatorio_disparo_${batch.id}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast.success(`📊 Relatório "${batch.title}" baixado com sucesso! (${batch.deliveredCount} linhas).`);
+    }, 1200);
+  };
+
+  // Sprint 40: Handle Individual Retry Job
+  const handleRetryIndividualJob = (jobId: string) => {
+    setRetryingJobId(jobId);
+    showToast.info(`Re-enfileirando job #${jobId} no BullMQ com prioridade alta...`);
+
+    setTimeout(() => {
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'QUEUED', error: undefined, errorDescription: undefined, attempts: j.attempts + 1 } : j));
+      setRetryingJobId(null);
+      showToast.success(`Job #${jobId} restaurado! Transmissão reiniciada.`);
+      setIsQueuePaused(false);
+    }, 1200);
+  };
+
+  const handleRetryAllFailedJobs = () => {
+    setIsRetryingAll(true);
+    showToast.info('Iniciando rotina de re-disparo em lote para todas as falhas de transmissão...');
+
+    setTimeout(() => {
+      setJobs(prev => prev.map(j => j.status === 'FAILED' ? { ...j, status: 'QUEUED', error: undefined, errorDescription: undefined, attempts: j.attempts + 1 } : j));
+      setIsRetryingAll(false);
+      showToast.success('🔄 Todas as falhas foram re-enfileiradas com sucesso na esteira Redis.');
+      setIsQueuePaused(false);
+    }, 1600);
+  };
+
+  const filteredJobs = jobs.filter(j => filterStatus === 'ALL' || j.status === filterStatus);
+
+  const completedCount = jobs.filter(j => j.status === 'COMPLETED').length;
+  const processingCount = jobs.filter(j => j.status === 'PROCESSING').length;
+  const queuedCount = jobs.filter(j => j.status === 'QUEUED').length;
+  const failedCount = jobs.filter(j => j.status === 'FAILED').length;
+  const cancelledCount = jobs.filter(j => j.status === 'CANCELLED').length;
+
+  const totalTrackableJobs = jobs.filter(j => j.status !== 'CANCELLED').length;
+  const processedJobsCount = completedCount + failedCount;
+  const progressPercentage = totalTrackableJobs > 0 ? Math.round((processedJobsCount / totalTrackableJobs) * 100) : 0;
+
+  const failedJobsList = jobs.filter(j => j.status === 'FAILED');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '40px' }}>
+      
+      {/* Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Activity size={32} style={{ color: 'var(--primary)' }} />
+            <span>Fila de Transmissão & Controle de Disparo (BullMQ)</span>
+          </h1>
+          <p style={{ color: 'var(--text-muted)' }}>Gerencie a cadência antispam, monitore o progresso do lote, audite falhas e execute re-disparos individuais</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Button variant="secondary" icon={RefreshCw} onClick={triggerRefresh} isLoading={loading}>
+            Sincronizar Cluster
+          </Button>
+        </div>
+      </div>
+
+      {/* Giant High-Fidelity Active Progress Tracker Panel */}
+      <div className="glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', borderColor: 'var(--success)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', backgroundColor: 'var(--success)' }} />
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)' }}>
+              <TrendingUp size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'white' }}>Transmissão em Lote Ativa (Progress Tracker)</h3>
+              <span style={{ fontSize: '0.85rem', color: '#86efac' }}>Acompanhamento em tempo real da esteira BullMQ / Redis</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {isQueuePaused ? (
+              <Button type="button" variant="primary" icon={Play} onClick={handleTogglePauseQueue} style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}>
+                Retomar Fila (Resume)
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" icon={Pause} onClick={handleTogglePauseQueue} style={{ borderColor: '#eab308', color: '#eab308' }}>
+                Pausar Fila (Pause)
+              </Button>
+            )}
+
+            <Button type="button" variant="secondary" icon={Ban} onClick={handleCancelActiveBroadcast} style={{ borderColor: 'var(--error)', color: 'var(--error)' }}>
+              Cancelar Transmissão
+            </Button>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#090d16', padding: '28px', borderRadius: '16px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock size={18} style={{ color: 'var(--primary)' }} />
+              <span>Progresso de Disparo: <strong style={{ color: 'var(--success)', fontSize: '1.2rem' }}>{progressPercentage}%</strong></span>
+            </span>
+
+            <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 600 }}>
+              {processedJobsCount} de {totalTrackableJobs} Mensagens Processadas
+            </span>
+          </div>
+
+          <div style={{ width: '100%', height: '24px', borderRadius: '12px', backgroundColor: '#1e293b', overflow: 'hidden', position: 'relative', boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.5)' }}>
+            <div 
+              style={{ 
+                height: '100%', width: `${progressPercentage}%`, 
+                backgroundColor: 'var(--success)', 
+                backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)',
+                backgroundSize: '40px 40px',
+                animation: isQueuePaused ? 'none' : 'progress-stripes 2s linear infinite',
+                transition: 'width 0.4s ease-out',
+                boxShadow: '0 0 15px var(--success)'
+              }} 
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <CheckCircle size={20} style={{ color: 'var(--success)' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sucessos:</span>
+                <strong style={{ fontSize: '1.2rem', color: 'white' }}>{completedCount}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ShieldAlert size={20} style={{ color: 'var(--error)' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Falhas / Rate-Limit:</span>
+                <strong style={{ fontSize: '1.2rem', color: 'var(--error)' }}>{failedCount}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Layers size={20} style={{ color: '#3b82f6' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Restantes na Fila:</span>
+                <strong style={{ fontSize: '1.2rem', color: '#3b82f6' }}>{queuedCount + processingCount}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Activity size={20} style={{ color: '#eab308' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status da Esteira:</span>
+                <strong style={{ fontSize: '1rem', color: isQueuePaused ? '#eab308' : 'var(--success)' }}>
+                  {isQueuePaused ? 'PAUSADA' : 'TRANSMITINDO'}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Grid Layout: Launch Configuration Hub */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '24px' }}>
+        
+        {/* Left Card: Delay Slider */}
+        <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '24px', borderColor: 'var(--primary)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: 'var(--primary)' }} />
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Sliders size={24} style={{ color: 'var(--primary)' }} />
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>Controle de Lançamento de Lote</h3>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Ajuste de intervalo antispam e volume de transmissão</span>
+              </div>
+            </div>
+            <Badge variant="primary">BullMQ Cluster</Badge>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: '#090d16', padding: '24px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={16} style={{ color: 'var(--primary)' }} />
+                  <span>Delay Entre Mensagens (Proteção Antispam)</span>
+                </label>
+                <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(99,102,241,0.15)', padding: '4px 12px', borderRadius: '20px', border: '1px solid rgba(99,102,241,0.3)' }}>
+                  {delaySeconds} segundos
+                </span>
+              </div>
+
+              <input 
+                type="range" 
+                min="1" 
+                max="15" 
+                step="0.5" 
+                value={delaySeconds} 
+                onChange={e => setDelaySeconds(parseFloat(e.target.value))}
+                style={{
+                  width: '100%', height: '8px', borderRadius: '4px', backgroundColor: '#1e293b',
+                  accentColor: 'var(--primary)', cursor: 'pointer'
+                }}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <span>1s (Velocidade Máxima)</span>
+                <span>5s (Padrão Recomendado)</span>
+                <span>15s (Máxima Segurança)</span>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Contatos Ativos no Lote</label>
+                <input 
+                  type="number" 
+                  value={activeContactsCount} 
+                  onChange={e => setActiveContactsCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{
+                    height: '40px', padding: '0 12px', borderRadius: '8px', backgroundColor: '#0f172a',
+                    border: '1px solid var(--border)', color: 'white', fontSize: '0.95rem', fontWeight: 600, outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'center' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tempo Estimado Total</span>
+                <span style={{ fontSize: '1.15rem', fontWeight: 700, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FastForward size={18} />
+                  <span>{estimatedMinutes}m {estimatedRemainderSeconds}s</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Smartphone size={16} /> <span>Celular do Administrador (Disparo de Teste)</span>
+                </label>
+                <input 
+                  type="text" 
+                  value={adminTestPhone} 
+                  onChange={e => setAdminTestPhone(e.target.value)}
+                  placeholder="+55 11 99999-8888"
+                  style={{
+                    height: '42px', padding: '0 16px', borderRadius: '8px', backgroundColor: '#0f172a',
+                    border: '1px solid var(--border)', color: 'white', fontSize: '0.9rem', outline: 'none'
+                  }}
+                />
+              </div>
+
+              <Button type="button" variant="secondary" onClick={handleFireTestMessage} isLoading={isTestFiring} style={{ height: '42px', alignSelf: 'flex-end', padding: '0 20px', borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+                Disparar Teste Prévio
+              </Button>
+            </div>
+
+            <Button type="button" variant="primary" icon={Send} onClick={handleLaunchMassBatch} isLoading={isLaunchingBatch} style={{ height: '48px', fontSize: '1rem', backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}>
+              {isLaunchingBatch ? 'Enfileirando Pacotes...' : 'Entrar na Fila Agora (Iniciar Disparo)'}
+            </Button>
+          </div>
+
+        </div>
+
+        {/* Right Card: Real-Time Broadcast Metrics Stats */}
+        <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Server size={24} style={{ color: '#10b981' }} />
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>Métricas do Cluster de Fila</h3>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Status de entrega e telemetria Redis em tempo real</span>
+              </div>
+            </div>
+            <Badge variant="success">Online</Badge>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ padding: '20px', borderRadius: '12px', backgroundColor: '#090d16', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}><Layers size={16} style={{ color: '#3b82f6' }} /> Em Espera</span>
+              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#3b82f6' }}>{queuedCount}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aguardando worker Redis</span>
+            </div>
+
+            <div style={{ padding: '20px', borderRadius: '12px', backgroundColor: '#090d16', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}><Activity size={16} style={{ color: '#eab308' }} /> Processando</span>
+              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#eab308' }}>{processingCount}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Consumindo API WhatsApp</span>
+            </div>
+
+            <div style={{ padding: '20px', borderRadius: '12px', backgroundColor: '#090d16', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={16} style={{ color: '#10b981' }} /> Disparados</span>
+              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#10b981' }}>{completedCount}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Entrega confirmada</span>
+            </div>
+
+            <div style={{ padding: '20px', borderRadius: '12px', backgroundColor: '#090d16', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldAlert size={16} style={{ color: 'var(--error)' }} /> Falhas/Cancelados</span>
+              <span style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--error)' }}>{failedCount + cancelledCount}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Retentativas / Abortos</span>
+            </div>
+          </div>
+
+          <div style={{ padding: '16px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: '#cbd5e1' }}>
+            <span style={{ fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}><Activity size={16} style={{ color: 'var(--primary)' }} /> Cluster BullMQ Config:</span>
+            <span style={{ fontFamily: 'monospace', color: '#6ee7b7' }}>[INFO] Worker conectado. Concorrência: 1 job por vez.</span>
+            <span style={{ fontFamily: 'monospace', color: '#93c5fd' }}>[CONFIG] Cadência: {delaySeconds}s de delay entre pacotes.</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sprint 40: Visualizador de Detalhes de Erros e Controle de Retentativa Individual */}
+      <div className="glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', borderColor: 'var(--error)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', backgroundColor: 'var(--error)' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--error)' }}>
+              <ShieldAlert size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span>Falhas no Envio Atual (Diagnostic & Retry Hub)</span>
+                <Badge variant="error">{failedJobsList.length} falhas detectadas</Badge>
+              </h3>
+              <span style={{ fontSize: '0.85rem', color: '#fca5a5' }}>Inspeção diagnóstica de conectividade e gatilhos de retentativa individual</span>
+            </div>
+          </div>
+
+          {failedJobsList.length > 0 && (
+            <Button 
+              type="button" 
+              variant="secondary" 
+              icon={RotateCcw} 
+              onClick={handleRetryAllFailedJobs} 
+              isLoading={isRetryingAll}
+              style={{ borderColor: 'var(--error)', color: 'var(--error)' }}
+            >
+              Re-enviar Todas as Falhas
+            </Button>
+          )}
+        </div>
+
+        {/* Failed Jobs Diagnostic Grid */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {failedJobsList.length === 0 ? (
+            <div style={{ padding: '42px 20px', textAlign: 'center', backgroundColor: '#090d16', borderRadius: '12px', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+              <CheckCircle2 size={36} style={{ color: 'var(--success)', margin: '0 auto 12px auto' }} />
+              <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'white' }}>Nenhuma falha detectada no lote de transmissão atual!</p>
+              <span style={{ fontSize: '0.85rem' }}>Todos os destinatários processados até o momento foram confirmados com sucesso.</span>
+            </div>
+          ) : (
+            failedJobsList.map(job => (
+              <div 
+                key={job.id} 
+                style={{ 
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', 
+                  borderRadius: '12px', backgroundColor: '#090d16', border: '1px solid rgba(239,68,68,0.3)',
+                  flexWrap: 'wrap', gap: '16px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', flex: 1, minWidth: '300px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--error)', marginTop: '2px' }}>
+                    <AlertCircle size={20} />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: '1.05rem', color: 'white' }}>{job.recipientName}</strong>
+                      <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontFamily: 'monospace' }}>{job.recipientPhone}</span>
+                      <Badge variant="error">{job.error || 'ERR_NETWORK_FAILURE'}</Badge>
+                    </div>
+
+                    <p style={{ fontSize: '0.85rem', color: '#fca5a5', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <HelpCircle size={15} style={{ flexShrink: 0 }} />
+                      <span>{job.errorDescription}</span>
+                    </p>
+
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Tentativas executadas: {job.attempts} • Último erro registrado às {job.timestamp}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    icon={Zap} 
+                    onClick={() => handleRetryIndividualJob(job.id)}
+                    isLoading={retryingJobId === job.id}
+                    style={{ height: '40px', fontSize: '0.85rem', borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                  >
+                    {retryingJobId === job.id ? 'Restaurando...' : 'Re-enviar (Retry)'}
+                  </Button>
+                </div>
+
+              </div>
+            ))
+          )}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <span>💡 <strong>Dica de Ajuda:</strong> O re-envio individual injeta o pacote no topo da fila do BullMQ, garantindo prioridade de tráfego sobre os envios normais.</span>
+        </div>
+      </div>
+
+      {/* Feed Terminal-Like de Logs de Disparo (SSE Log Viewer) */}
+      <div className="glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px', borderColor: '#3b82f6' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
+              <Terminal size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'white' }}>Feed Terminal-Like de Logs de Disparo (SSE Log Viewer)</h3>
+              <span style={{ fontSize: '0.85rem', color: '#93c5fd' }}>Console de monitoramento de eventos de servidor emitidos pelo BullMQ / Redis</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'white', cursor: 'pointer', userSelect: 'none' }}>
+              <input type="checkbox" checked={autoScroll} onChange={e => setAutoScroll(e.target.checked)} style={{ accentColor: '#3b82f6', width: '18px', height: '18px', cursor: 'pointer' }} />
+              <span>🔒 Auto-scroll para novos eventos</span>
+            </label>
+
+            <Button type="button" variant="secondary" icon={Trash2} onClick={handleClearLogsConsole} style={{ height: '36px', fontSize: '0.8rem' }}>
+              Limpar Console
+            </Button>
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: '#030712', borderRadius: '12px', border: '1px solid #1f2937', padding: '24px',
+          fontFamily: 'monospace', fontSize: '0.9rem', lineHeight: 1.6, color: '#e5e7eb', height: '320px',
+          overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.8)'
+        }}>
+          {logs.length === 0 ? (
+            <div style={{ margin: 'auto', color: '#6b7280', fontStyle: 'italic' }}>[Console limpo. Aguardando novos eventos SSE da fila...]</div>
+          ) : (
+            logs.map(log => {
+              const getLogColor = (t: string) => {
+                switch (t) {
+                  case 'INFO': return '#3b82f6';
+                  case 'SUCCESS': return '#10b981';
+                  case 'WARNING': return '#f59e0b';
+                  case 'ERROR': return '#ef4444';
+                  default: return '#9ca3af';
+                }
+              };
+
+              return (
+                <div key={log.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.02)', paddingBottom: '4px' }}>
+                  <span style={{ color: '#6b7280', userSelect: 'none', fontSize: '0.85rem' }}>[{log.timestamp}]</span>
+                  <span style={{ 
+                    color: getLogColor(log.type), fontWeight: 700, fontSize: '0.8rem', padding: '1px 6px', 
+                    borderRadius: '4px', backgroundColor: `rgba(${log.type === 'ERROR' ? '239,68,68' : log.type === 'SUCCESS' ? '16,185,129' : log.type === 'WARNING' ? '245,158,11' : '59,130,246'}, 0.1)`,
+                    border: `1px solid ${getLogColor(log.type)}`, minWidth: '75px', textAlign: 'center'
+                  }}>
+                    {log.type}
+                  </span>
+                  <span style={{ color: log.type === 'ERROR' ? '#fca5a5' : log.type === 'WARNING' ? '#fde68a' : log.type === 'SUCCESS' ? '#a7f3d0' : '#e5e7eb', wordBreak: 'break-word', flex: 1 }}>
+                    {log.message}
+                  </span>
+                </div>
+              );
+            })
+          )}
+          <div ref={terminalBottomRef} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <span>💡 <strong>Dica:</strong> Buffer limitado às últimas 500 entradas para otimização de RAM.</span>
+          <span>Linhas no buffer atual: <strong>{logs.length}</strong> / 500</span>
+        </div>
+      </div>
+
+      {/* Active Queue Details List */}
+      <div className="glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ListFilter size={22} style={{ color: 'var(--primary)' }} />
+              <span>Jobs na Fila de Disparo Ativa</span>
+            </h3>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Lista de contatos aguardando processamento ou concluídos nesta sessão</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', backgroundColor: '#090d16', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              {['ALL', 'QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'].map(st => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setFilterStatus(st)}
+                  style={{
+                    padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                    border: 'none', transition: 'all 0.2s',
+                    backgroundColor: filterStatus === st ? 'var(--primary)' : 'transparent',
+                    color: filterStatus === st ? 'white' : 'var(--text-muted)'
+                  }}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+
+            {(failedCount > 0 || cancelledCount > 0) && (
+              <Button variant="secondary" onClick={handlePurgeFailedJobs} style={{ height: '36px', fontSize: '0.8rem', borderColor: 'var(--error)', color: 'var(--error)' }}>
+                Limpar Falhas/Cancelados
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {filteredJobs.length === 0 ? (
+            <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              Nenhum job encontrado para o status selecionado.
+            </div>
+          ) : (
+            filteredJobs.map(job => (
+              <div 
+                key={job.id} 
+                style={{ 
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', 
+                  borderRadius: '12px', backgroundColor: job.status === 'PROCESSING' ? 'rgba(234,179,8,0.1)' : 
+                                                         job.status === 'CANCELLED' ? 'rgba(100,116,139,0.1)' : '#090d16', 
+                  border: `1px solid ${job.status === 'PROCESSING' ? '#eab308' : 
+                                       job.status === 'CANCELLED' ? '#64748b' : 'var(--border)'}`,
+                  flexWrap: 'wrap', gap: '16px', opacity: job.status === 'CANCELLED' ? 0.6 : 1
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ 
+                    width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backgroundColor: job.status === 'COMPLETED' ? 'rgba(16,185,129,0.1)' : 
+                                     job.status === 'PROCESSING' ? 'rgba(234,179,8,0.2)' : 
+                                     job.status === 'FAILED' ? 'rgba(239,68,68,0.1)' : 
+                                     job.status === 'CANCELLED' ? 'rgba(100,116,139,0.2)' : 'rgba(255,255,255,0.05)',
+                    color: job.status === 'COMPLETED' ? '#10b981' : 
+                           job.status === 'PROCESSING' ? '#eab308' : 
+                           job.status === 'FAILED' ? 'var(--error)' : 
+                           job.status === 'CANCELLED' ? '#94a3b8' : '#94a3b8'
+                  }}>
+                    {job.status === 'COMPLETED' ? <CheckCircle2 size={20} /> :
+                     job.status === 'PROCESSING' ? <Activity size={20} className="spinner" /> :
+                     job.status === 'FAILED' ? <AlertCircle size={20} /> : 
+                     job.status === 'CANCELLED' ? <Ban size={20} /> : <Clock size={20} />}
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <strong style={{ fontSize: '1rem', color: 'white', textDecoration: job.status === 'CANCELLED' ? 'line-through' : 'none' }}>
+                        {job.recipientName}
+                      </strong>
+                      <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace' }}>{job.recipientPhone}</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {job.messageSnippet}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  {job.error && (
+                    <span style={{ fontSize: '0.75rem', color: job.status === 'CANCELLED' ? '#94a3b8' : 'var(--error)', backgroundColor: job.status === 'CANCELLED' ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.1)', padding: '4px 8px', borderRadius: '4px', border: `1px solid ${job.status === 'CANCELLED' ? '#64748b' : 'var(--error)'}` }}>
+                      {job.error}
+                    </span>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    <Badge variant={job.status === 'COMPLETED' ? 'success' : job.status === 'PROCESSING' ? 'warning' : job.status === 'FAILED' ? 'error' : 'neutral'}>
+                      {job.status}
+                    </Badge>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                      Tentativas: {job.attempts} • {job.timestamp}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            ))
+          )}
+        </div>
+
+      </div>
+
+      {/* Painel de Histórico de Lotes Transmitidos */}
+      <div className="glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', borderColor: '#a855f7' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(168,85,247,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
+              <History size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'white' }}>Histórico de Lotes Transmitidos Passados</h3>
+              <span style={{ fontSize: '0.85rem', color: '#d8b4fe' }}>Auditoria de entregas, volumes disparados e relatórios CSV consolidados</span>
+            </div>
+          </div>
+
+          <Badge variant="primary">Mês Atual: Maio/2026</Badge>
+        </div>
+
+        <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: '#090d16' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(255,255,255,0.03)', color: '#94a3b8' }}>
+                <th style={{ padding: '16px 24px', fontWeight: 600 }}>Data de Envio</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600 }}>Notícia / Minuta Disparada</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600 }}>Base Alcançada</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600 }}>Taxa de Sucesso</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600 }}>Duração Total</th>
+                <th style={{ padding: '16px 24px', textAlign: 'right', fontWeight: 600 }}>Ações de Auditoria</th>
+              </tr>
+            </thead>
+            <tbody style={{ borderTop: '1px solid var(--border)' }}>
+              {historicalBatches.map(batch => (
+                <tr key={batch.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '18px 24px', color: '#cbd5e1', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Clock size={16} style={{ color: 'var(--primary)' }} />
+                    <span>{batch.date}</span>
+                  </td>
+
+                  <td style={{ padding: '18px 24px', color: 'white', fontWeight: 700 }}>
+                    {batch.title}
+                  </td>
+
+                  <td style={{ padding: '18px 24px', color: '#94a3b8' }}>
+                    <strong style={{ color: '#e2e8f0' }}>{batch.deliveredCount}</strong> / {batch.totalContacts} contatos
+                  </td>
+
+                  <td style={{ padding: '18px 24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Badge variant={batch.successRate === '100%' ? 'success' : 'primary'}>
+                        {batch.successRate}
+                      </Badge>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>entregue</span>
+                    </div>
+                  </td>
+
+                  <td style={{ padding: '18px 24px', color: '#cbd5e1', fontFamily: 'monospace' }}>
+                    {batch.duration}
+                  </td>
+
+                  <td style={{ padding: '18px 24px', textAlign: 'right' }}>
+                    <Button 
+                      variant="secondary" 
+                      icon={Download} 
+                      onClick={() => handleDownloadBatchCsv(batch)}
+                      isLoading={isExportingCsvId === batch.id}
+                      style={{ height: '36px', fontSize: '0.8rem', borderColor: '#a855f7', color: '#a855f7', padding: '0 14px' }}
+                    >
+                      {isExportingCsvId === batch.id ? 'Gerando CSV...' : 'Baixar Relatório CSV'}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FileSpreadsheet size={16} style={{ color: '#a855f7' }} />
+            <span>Os relatórios CSV seguem o padrão RFC 4180 e contêm os IDs de rastreamento do Meta Graph API (WAMID) para auditoria antispam.</span>
+          </span>
+          <span>Exibindo os 4 lotes mais recentes</span>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+export default BroadcastQueue;

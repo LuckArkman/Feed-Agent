@@ -36,11 +36,20 @@ process.on('unhandledRejection', (reason: unknown) => {
 
 dotenv.config();
 
+import helmet from 'helmet';
+import { globalLimiter } from './middlewares/rateLimiter';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Express App Bootstrap
 // ─────────────────────────────────────────────────────────────────────────────
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Security Headers
+app.use(helmet());
+
+// Global Rate Limiting
+app.use(globalLimiter);
 
 // CORS — only allow the Vue 3 dashboard origin
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',');
@@ -120,4 +129,8 @@ async function startServer() {
   }
 }
 
-startServer();
+export { app };
+
+if (require.main === module) {
+  startServer();
+}

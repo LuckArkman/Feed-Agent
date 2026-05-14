@@ -64,6 +64,7 @@ export declare interface WhatsAppService {
 export class WhatsAppService extends EventEmitter {
   private socket:        WASocket | null = null;
   private qrTimeoutRef:  ReturnType<typeof setTimeout> | null = null;
+  private reconnectTimeoutRef: ReturnType<typeof setTimeout> | null = null;
   private status:        WaStatus = {
     state:       WaConnectionState.CLOSE,
     lastUpdated: new Date(),
@@ -92,10 +93,20 @@ export class WhatsAppService extends EventEmitter {
 
     const { state: authState, saveCreds } = await useMultiFileAuthState(SESSIONS_DIR);
 
+    const dummyLogger = {
+      level: 'silent',
+      child: () => dummyLogger,
+      info: () => {},
+      debug: () => {},
+      warn: () => {},
+      error: () => {},
+      trace: () => {},
+    };
+
     this.socket = makeWASocket({
       version,
       auth:              authState,
-      logger:            { level: 'silent' } as any,
+      logger:            dummyLogger as any,
       printQRInTerminal: false,
     });
 
@@ -242,7 +253,14 @@ export class WhatsAppService extends EventEmitter {
         } else {
           logger.warn(`[whatsapp]: Connection closed. Reason code: ${reason}. Reconnecting in 5s...`);
           this.emit('wa:close', reason);
-          setTimeout(() => this.initialize(), 5_000);
+          
+          if (this.reconnectTimeoutRef) {
+            clearTimeout(this.reconnectTimeoutRef);
+          }
+          this.reconnectTimeoutRef = setTimeout(() => {
+            this.reconnectTimeoutRef = null;
+            this.initialize().catch(() => {});
+          }, 5_000);
         }
       }
     });
@@ -289,6 +307,10 @@ export class WhatsAppService extends EventEmitter {
 
   /** Destroys the active socket, triggering a 'close' event. */
   private _closeSocket(): void {
+    if (this.reconnectTimeoutRef) {
+      clearTimeout(this.reconnectTimeoutRef);
+      this.reconnectTimeoutRef = null;
+    }
     if (this.socket) {
       this.socket.end(undefined);
       this.socket = null;

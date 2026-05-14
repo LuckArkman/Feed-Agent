@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authController from '../controllers/AuthController';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { authLimiter } from '../middlewares/rateLimiter';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ const router = Router();
  *       409:
  *         description: E-mail already registered.
  */
-router.post('/register', authController.register.bind(authController));
+router.post('/register', authLimiter, authController.register.bind(authController));
 
 /**
  * @openapi
@@ -51,7 +52,7 @@ router.post('/register', authController.register.bind(authController));
  *       401:
  *         description: Invalid credentials.
  */
-router.post('/login', authController.login.bind(authController));
+router.post('/login', authLimiter, authController.login.bind(authController));
 
 /**
  * @openapi

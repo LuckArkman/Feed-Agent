@@ -29,9 +29,7 @@ export interface BroadcastJobData {
   contacts: Pick<Contact, 'id' | 'phoneNumber' | 'name'>[];
 }
 
-export const broadcastWorker = new Worker<BroadcastJobData>(
-  BROADCAST_QUEUE_NAME,
-  async (job: Job<BroadcastJobData>) => {
+export const broadcastProcessor = async (job: Job<BroadcastJobData>) => {
     const { draftId, userId, contacts } = job.data;
     logger.info(`[broadcast-worker]: Started broadcasting Draft ${draftId} to ${contacts.length} contacts.`);
 
@@ -143,7 +141,11 @@ export const broadcastWorker = new Worker<BroadcastJobData>(
       logger.error(`[broadcast-worker]: Job ${job.id} failed: ${(error as Error).message}`);
       throw error;
     }
-  },
+  };
+
+export const broadcastWorker = new Worker<BroadcastJobData>(
+  BROADCAST_QUEUE_NAME,
+  broadcastProcessor,
   {
     connection: redisClient,
     concurrency: 1, // Strict concurrency = 1 to respect WhatsApp rate limits globally
