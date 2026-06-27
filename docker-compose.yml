@@ -53,6 +53,8 @@ services:
   postgres:
     image: postgres:15-alpine
     restart: unless-stopped
+    ports:
+      - "5431:5432"
     environment:
       - POSTGRES_USER=${DB_USER:-admin}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-admin123}
@@ -75,6 +77,8 @@ services:
   mongodb:
     image: mongo:6-jammy
     restart: unless-stopped
+    ports:
+      - "27018:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-root}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-root123}
