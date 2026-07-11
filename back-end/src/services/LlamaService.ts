@@ -1,6 +1,5 @@
 import path from 'path';
 import fs from 'fs';
-import { getLlama, LlamaChatSession } from 'node-llama-cpp';
 import logger from '../utils/logger';
 import { AppError } from '../utils/AppError';
 
@@ -18,6 +17,7 @@ export class LlamaService {
   private isInitialized = false;
   private initPromise: Promise<void> | null = null;
   private grammarJson: any = null;
+  private LlamaChatSessionClass: any = null;
 
   constructor() {
     const modelDir = process.env.MODELS_DIR || path.join(process.cwd(), 'models');
@@ -38,6 +38,10 @@ export class LlamaService {
     }
 
     try {
+      // Use dynamic import to avoid ERR_REQUIRE_ASYNC_MODULE in CommonJS for ESM modules
+      const { getLlama, LlamaChatSession } = await eval("import('node-llama-cpp')");
+      this.LlamaChatSessionClass = LlamaChatSession;
+
       this.llama = await getLlama();
       this.model = await this.llama.loadModel({ modelPath });
       
@@ -70,7 +74,7 @@ export class LlamaService {
       logger.info(`[llama-service]: Running native inference...`);
 
       // Create a fresh session for each request, but share the context memory pool
-      const session = new LlamaChatSession({ 
+      const session = new this.LlamaChatSessionClass({ 
         contextSequence: this.context.getSequence(),
         systemPrompt: systemPrompt
       });
