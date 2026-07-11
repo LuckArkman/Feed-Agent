@@ -72,14 +72,15 @@ export class DraftService {
       allowedAttributes: {},
     };
 
-    const sanitizedContent: NewsArticleJSON = {
+    const sanitizedContent: any = {
       titulo: sanitizeHtml(content.titulo || '', sanitizeOptions).trim(),
       resumo: sanitizeHtml(content.resumo || '', sanitizeOptions).trim(),
+      corpo: sanitizeHtml((content as any).corpo || '', sanitizeOptions).trim(),
       fonte: sanitizeHtml(content.fonte || '', sanitizeOptions).trim(),
     };
 
-    if (!sanitizedContent.titulo || !sanitizedContent.resumo || !sanitizedContent.fonte) {
-      throw new AppError('All fields (titulo, resumo, fonte) must be provided and cannot be empty.', 400);
+    if (!sanitizedContent.titulo || !sanitizedContent.fonte) {
+      throw new AppError('Fields (titulo, fonte) must be provided and cannot be empty.', 400);
     }
 
     return prisma.draft.update({

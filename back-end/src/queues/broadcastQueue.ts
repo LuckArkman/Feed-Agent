@@ -43,7 +43,8 @@ export const broadcastProcessor = async (job: Job<BroadcastJobData>) => {
 
       // 2. Format Message (Assuming the Draft has titulo, resumo, fonte in generatedContent)
       const content = draft.generatedContent as any;
-      const messageText = `*${content.titulo || 'Notícia'}*\n\n${content.resumo || ''}\n\n_Fonte: ${content.fonte || 'Desconhecida'}_`;
+      const bodyText = content.corpo || content.resumo || '';
+      const messageText = `*${content.titulo || 'Notícia'}*\n\n${bodyText}\n\n_Fonte: ${content.fonte || 'Desconhecida'}_`;
 
       // 3. Send Messages Sequentially
       let successCount = 0;

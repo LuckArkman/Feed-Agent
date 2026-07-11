@@ -238,6 +238,7 @@ export const DraftsStudio: React.FC = () => {
         const payload = {
           titulo: formTitle,
           resumo: formSummary,
+          corpo: formContent,
           fonte: formSource,
         };
         const res = await apiClient.put(`/drafts/${editingDraft.id}`, payload);

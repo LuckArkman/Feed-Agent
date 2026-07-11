@@ -73,6 +73,7 @@ export class DraftController {
       const generatedContent = {
         titulo: title,
         resumo: summary || '',
+        corpo: content || '',
         fonte: source || 'Estúdio Kanban Manual'
       };
 

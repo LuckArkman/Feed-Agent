@@ -9,6 +9,7 @@ export interface NewsArticleJSON {
   titulo: string;
   resumo: string;
   fonte: string;
+  corpo?: string;
 }
 
 export class NewsGeneratorService {
