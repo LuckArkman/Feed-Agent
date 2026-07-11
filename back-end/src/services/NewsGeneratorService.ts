@@ -1,4 +1,4 @@
-import geminiService from './GeminiService';
+import llamaService from './LlamaService';
 import { NEWS_SYSTEM_PROMPT, buildNewsPrompt } from '../utils/promptBuilder';
 import logger from '../utils/logger';
 import { AppError } from '../utils/AppError';
@@ -80,7 +80,7 @@ Regras:
       try {
         logger.info(`[news-generator]: Requesting custom LLM generation (Attempt ${attempt}/${maxRetries})...`);
         
-        const responseText = await geminiService.generateCompletion(
+        const responseText = await llamaService.generateCompletion(
           userPrompt,
           customSystemPrompt,
           { format: 'json', temperature: 0.2 }
@@ -133,7 +133,7 @@ Regras:
       try {
         logger.info(`[news-generator]: Requesting LLM generation (Attempt ${attempt}/${maxRetries})...`);
         
-        const responseText = await geminiService.generateCompletion(
+        const responseText = await llamaService.generateCompletion(
           prompt,
           NEWS_SYSTEM_PROMPT,
           { format: 'json', temperature: 0.2 } // Extremely low temp to force strict compliance
