@@ -43,7 +43,10 @@ export const broadcastProcessor = async (job: Job<BroadcastJobData>) => {
 
       // 2. Format Message (Assuming the Draft has titulo, resumo, fonte in generatedContent)
       const content = draft.generatedContent as any;
-      const bodyText = content.corpo || content.resumo || '';
+      let bodyText = content.resumo || '';
+      if (content.corpo && content.corpo.trim() !== '') {
+        bodyText += '\n\n' + content.corpo.trim();
+      }
       const messageText = `*${content.titulo || 'Notícia'}*\n\n${bodyText}\n\n_Fonte: ${content.fonte || 'Desconhecida'}_`;
 
       // 3. Send Messages Sequentially
@@ -129,6 +132,9 @@ export const broadcastProcessor = async (job: Job<BroadcastJobData>) => {
             });
             // Throwing triggers BullMQ's exponential backoff and retry (max 3 attempts)
             throw err;
+          } else {
+            // Not a timeout, just a regular error (like rate limit that was paused, or something else)
+            logger.error(`[broadcast-worker]: Unhandled error for contact ${contact.phoneNumber}: ${err.message}. Skipping to next contact.`);
           }
         }
 

@@ -78,7 +78,7 @@ export const DraftsStudio: React.FC = () => {
               id: String(d.id),
               title: article.titulo || article.title || 'Minuta sem título',
               summary: article.resumo || article.summary || article.text?.substring(0, 50) || '',
-              content: article.resumo || article.text || '',
+              content: article.corpo || article.resumo || article.text || '',
               rawOcrSourceText: d.originalText || '',
               status: d.status,
               priority: 'Média',
@@ -285,11 +285,21 @@ export const DraftsStudio: React.FC = () => {
     showToast.info(`Minuta movida para a coluna ${newStatus}.`);
   };
 
-  const handleDirectBroadcast = (draft: DraftItem) => {
-    showToast.success(`Minuta "${draft.title}" disparada para a esteira do WhatsApp Hub!`);
-    handleQuickStatusChange(draft.id, 'APPROVED');
-    setEditingDraft(null);
-    setIsCreatingNew(false);
+  const handleDirectBroadcast = async (draft: DraftItem) => {
+    try {
+      const res = await apiClient.post(`/drafts/${draft.id}/approve`, { includeImage: false });
+      if (res.data?.success) {
+        showToast.success(`Minuta "${draft.title}" disparada para a esteira do WhatsApp Hub!`);
+        handleQuickStatusChange(draft.id, 'APPROVED');
+      } else {
+        showToast.error('Falha ao disparar minuta diretamente.');
+      }
+    } catch (err) {
+      showToast.error('Erro de conexão ao disparar a minuta.');
+    } finally {
+      setEditingDraft(null);
+      setIsCreatingNew(false);
+    }
   };
 
   // Sprint 35: Centralized Broadcast Confirmation Hub
@@ -304,10 +314,28 @@ export const DraftsStudio: React.FC = () => {
     setIsAllocatingBullMq(true);
     
     try {
+      // Auto-save if the editor is open for this candidate
+      if (editingDraft && editingDraft.id === approveDraftCandidate.id) {
+        const payload = {
+          titulo: formTitle,
+          resumo: formSummary,
+          corpo: formContent,
+          fonte: formSource,
+        };
+        await apiClient.put(`/drafts/${editingDraft.id}`, payload);
+      }
+
       const res = await apiClient.post(`/drafts/${approveDraftCandidate.id}/approve`, { includeImage: false });
       if (res.data?.success) {
         showToast.success(`🚀 Sucesso! A minuta "${approveDraftCandidate.title}" foi aprovada e enfileirada.`);
-        setDrafts(prev => prev.map(d => d.id === approveDraftCandidate.id ? { ...d, status: 'APPROVED' } : d));
+        setDrafts(prev => prev.map(d => d.id === approveDraftCandidate.id ? { 
+          ...d, 
+          status: 'APPROVED',
+          title: (editingDraft && editingDraft.id === approveDraftCandidate.id) ? formTitle : d.title,
+          summary: (editingDraft && editingDraft.id === approveDraftCandidate.id) ? formSummary : d.summary,
+          content: (editingDraft && editingDraft.id === approveDraftCandidate.id) ? formContent : d.content,
+          source: (editingDraft && editingDraft.id === approveDraftCandidate.id) ? formSource : d.source,
+        } : d));
       } else {
         showToast.error('Falha ao aprovar minuta.');
       }
