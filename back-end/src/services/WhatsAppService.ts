@@ -150,9 +150,12 @@ export class WhatsAppService extends EventEmitter {
 
     // 1.5. Resolve the actual registered JID on WhatsApp (fixes Brazilian 9th digit issue)
     try {
-      const [result] = await this.socket.onWhatsApp(sanitized);
-      if (result && result.exists) {
-        jid = result.jid;
+      const results = await this.socket.onWhatsApp(sanitized);
+      if (results && results.length > 0) {
+        const result = results[0];
+        if (result.exists) {
+          jid = result.jid;
+        }
       }
     } catch (err) {
       logger.warn(`[whatsapp]: Could not resolve onWhatsApp for ${sanitized}: ${err}`);
