@@ -2,12 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Phone,
   Plus,
-  RefreshCw, 
-  Settings,
-  Activity,
-  AlertTriangle
+  RefreshCw
 } from 'lucide-react';
-import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { showToast } from '@/utils/toastHelper';
 import apiClient from '@/services/apiClient';
@@ -52,8 +48,8 @@ export const WhatsAppHub: React.FC = () => {
 
   const handleCreateInstance = async () => {
     try {
-      if (instances.length >= 5) {
-        showToast.error('Você atingiu o limite máximo de 5 instâncias.');
+      if (instances.length >= 500) {
+        showToast.error('Você atingiu o limite máximo de 500 instâncias.');
         return;
       }
       await apiClient.post('/whatsapp/instances', { name: `Dispositivo ${instances.length + 1}` });
@@ -108,10 +104,10 @@ export const WhatsAppHub: React.FC = () => {
             Gerenciador de Múltiplas Instâncias
           </h1>
           <p style={{ color: 'var(--text-muted)' }}>
-            Gerencie até 5 aparelhos simultâneos. As mensagens serão distribuídas automaticamente (Round-Robin).
+            Gerencie até 500 aparelhos simultâneos. As mensagens serão distribuídas automaticamente (Round-Robin).
           </p>
         </div>
-        <Button variant="primary" icon={Plus} onClick={handleCreateInstance} disabled={instances.length >= 5}>
+        <Button variant="primary" icon={Plus} onClick={handleCreateInstance} disabled={instances.length >= 500}>
           Nova Instância
         </Button>
       </div>

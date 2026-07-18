@@ -209,7 +209,11 @@ export class WhatsAppService extends EventEmitter {
     this.isManualOperation = true;
     try {
       if (this.socket) {
-        await this.socket.logout('Manual logout requested via API').catch(() => {});
+        // Run logout with a 3-second timeout to prevent hanging the API if Baileys is stuck
+        await Promise.race([
+          this.socket.logout('Manual logout requested via API').catch(() => {}),
+          new Promise(resolve => setTimeout(resolve, 3000))
+        ]);
       }
       this._closeSocket();
       this._updateStatus(WaConnectionState.CLOSE);

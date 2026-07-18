@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  AlertTriangle, RefreshCw, CheckCircle2, ShieldAlert, Clock, LogOut, Send, MessageSquare, Lock, CheckCheck
+  AlertTriangle, RefreshCw, CheckCircle2, Clock, LogOut, Send
 } from 'lucide-react';
 import { Button } from '@/components/Button';
-import { useSseGateway, SseEvent } from '@/hooks/useSseGateway';
+import { useSseGateway } from '@/hooks/useSseGateway';
+import type { SseEvent } from '@/hooks/useSseGateway';
 import { showToast } from '@/utils/toastHelper';
 import apiClient from '@/services/apiClient';
 

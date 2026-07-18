@@ -19,7 +19,7 @@ export class WhatsAppController {
    */
   async getInstances(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.userId;
       const dbInstances = await prisma.whatsAppInstance.findMany({
         where: { userId },
         orderBy: { id: 'asc' }
@@ -49,12 +49,12 @@ export class WhatsAppController {
    */
   async createInstance(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.userId;
       const { name } = req.body;
 
       const currentCount = await prisma.whatsAppInstance.count({ where: { userId } });
-      if (currentCount >= 5) {
-        throw new AppError('Você atingiu o limite máximo de 5 conexões do WhatsApp.', 403);
+      if (currentCount >= 500) {
+        throw new AppError('Você atingiu o limite máximo de 500 conexões do WhatsApp.', 403);
       }
 
       const instanceName = name || `Dispositivo ${currentCount + 1}`;
@@ -82,7 +82,7 @@ export class WhatsAppController {
    */
   async deleteInstance(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.userId;
       const instanceId = parseInt(req.params.id as string, 10);
 
       const instance = await prisma.whatsAppInstance.findFirst({
@@ -112,7 +112,7 @@ export class WhatsAppController {
    * Opens a Server-Sent Events (SSE) stream for a specific instance.
    */
   streamQr(req: Request, res: Response): void {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.userId;
     const instanceId = parseInt(req.params.id as string, 10);
 
     if (!userId || isNaN(instanceId)) {
@@ -181,7 +181,7 @@ export class WhatsAppController {
    */
   async sendTestMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.userId;
       const instanceId = parseInt(req.params.id as string, 10);
       const { phoneNumber, message } = req.body;
 
@@ -207,7 +207,7 @@ export class WhatsAppController {
    */
   async restart(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.userId;
       const instanceId = parseInt(req.params.id as string, 10);
 
       const liveInstance = whatsAppInstanceManager.getInstance(instanceId);
@@ -227,7 +227,7 @@ export class WhatsAppController {
    */
   async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.userId;
       const instanceId = parseInt(req.params.id as string, 10);
 
       const liveInstance = whatsAppInstanceManager.getInstance(instanceId);
