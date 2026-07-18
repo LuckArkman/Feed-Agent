@@ -297,35 +297,30 @@ export const BroadcastQueue: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '40px' }}>
       
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Activity size={32} style={{ color: 'var(--primary)' }} />
-            <span>Fila de Transmissão & Controle de Disparo (BullMQ)</span>
+      <div className="page-hero">
+        <div className="page-hero-copy">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Activity size={28} style={{ color: 'var(--primary)' }} />
+            Disparos
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Gerencie a cadência antispam, monitore o progresso do lote, audite falhas e execute re-disparos individuais</p>
+          <p>Acompanhe a fila, o progresso do lote e o histórico de envios.</p>
         </div>
-
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Button variant="secondary" icon={RefreshCw} onClick={triggerRefresh} isLoading={loading}>
-            Sincronizar Cluster
-          </Button>
-        </div>
+        <Button variant="secondary" icon={RefreshCw} onClick={triggerRefresh} isLoading={loading}>
+          Atualizar
+        </Button>
       </div>
 
-      {/* Giant High-Fidelity Active Progress Tracker Panel */}
-      <div className="glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', borderColor: 'var(--success)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', backgroundColor: 'var(--success)' }} />
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)' }}>
-              <TrendingUp size={24} />
+      <div className="glass-panel" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 20, borderColor: 'var(--success)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', backgroundColor: 'var(--success)' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: 'color-mix(in srgb, var(--success) 14%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)' }}>
+              <TrendingUp size={22} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'white' }}>Transmissão em Lote Ativa (Progress Tracker)</h3>
-              <span style={{ fontSize: '0.85rem', color: '#86efac' }}>Acompanhamento em tempo real da esteira BullMQ / Redis</span>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Lote em andamento</h3>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Progresso da fila de transmissão</span>
             </div>
           </div>
 

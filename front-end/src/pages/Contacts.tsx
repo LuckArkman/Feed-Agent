@@ -703,40 +703,38 @@ export const Contacts: React.FC = () => {
         </div>
       )}
 
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Users size={32} style={{ color: 'var(--primary)' }} />
-            <span>Gerenciamento de Contatos</span>
+      <div className="page-hero">
+        <div className="page-hero-copy">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Users size={28} style={{ color: 'var(--primary)' }} />
+            Contatos
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Cadastre, pesquise, analise métricas e gerencie os destinatários das campanhas</p>
+          <p>Cadastre, importe CSV e gerencie destinatários dos disparos.</p>
         </div>
-
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <Button type="button" variant="secondary" icon={BarChart3} onClick={() => setShowAnalytics(prev => !prev)}>
-            {showAnalytics ? 'Ocultar Estatísticas' : 'Painel de Métricas'}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Button type="button" variant="secondary" icon={BarChart3} onClick={() => setShowAnalytics((prev) => !prev)}>
+            {showAnalytics ? 'Ocultar métricas' : 'Métricas'}
           </Button>
-          <Button type="button" variant="secondary" icon={UploadCloud} onClick={() => setShowImportPanel(prev => !prev)}>
-            {showImportPanel ? 'Ocultar Importador' : 'Importar CSV Planilha'}
+          <Button type="button" variant="secondary" icon={UploadCloud} onClick={() => setShowImportPanel((prev) => !prev)}>
+            {showImportPanel ? 'Ocultar importação' : 'Importar CSV'}
           </Button>
           <Button type="button" variant="secondary" icon={Download} onClick={handleExportCSV}>
-            Exportar CSV
+            Exportar
           </Button>
           <Button type="button" variant="primary" icon={Plus} onClick={handleOpenNewModal}>
-            Novo Contato
+            Novo contato
           </Button>
         </div>
       </div>
 
       {/* Advanced Drag-and-Drop CSV Import Panel */}
       {showImportPanel && (
-        <div className="glass-panel" style={{ padding: '36px', display: 'flex', flexDirection: 'column', gap: '28px', border: '1px solid rgba(99, 102, 241, 0.3)', animation: 'slide-down 0.3s ease-out' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div className="glass-panel" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FileSpreadsheet size={24} style={{ color: 'var(--primary)' }} />
-                <span>Importador e Validador de Planilhas CSV</span>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FileSpreadsheet size={22} style={{ color: 'var(--primary)' }} />
+                <span>Importar CSV</span>
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
                 Arraste seu arquivo .csv estruturado ou baixe a planilha modelo para padronizar o cadastro em lote.

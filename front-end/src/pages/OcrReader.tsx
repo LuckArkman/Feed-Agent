@@ -727,34 +727,31 @@ A minuta foi salva automaticamente e está aguardando aprovação no quadro Kanb
         </div>
       )}
 
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <FileUp size={32} style={{ color: 'var(--primary)' }} />
-            <span>Digitalização de Jornais e Recortes (OCR)</span>
+      <div className="page-hero">
+        <div className="page-hero-copy">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FileUp size={28} style={{ color: 'var(--primary)' }} />
+            Leitor OCR
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Arraste páginas, aplique ajustes, inspecione o OCR e forneça as informações para o Gemini 3.5 Flash-lite gerar a minuta de notícia</p>
+          <p>Envie PDF ou imagem; o servidor extrai o texto e gera a minuta com o modelo local.</p>
         </div>
-
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {queue.length > 0 && (
             <Button type="button" variant="secondary" icon={Trash2} onClick={handleClearAll} disabled={uploadingCount > 0}>
-              Limpar Fila
+              Limpar fila
             </Button>
           )}
           <Button type="button" variant="primary" icon={Sparkles} onClick={handleStartUploads} isLoading={uploadingCount > 0} disabled={waitingCount === 0}>
-            {uploadingCount > 0 ? `Processando (${uploadingCount})...` : 'Iniciar Processamento OCR'}
+            {uploadingCount > 0 ? `Processando (${uploadingCount})…` : 'Processar OCR'}
           </Button>
         </div>
       </div>
 
-      {/* Sprint 30: AI Prompt Customization Studio Panel */}
-      <div className="glass-panel" style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '32px', borderColor: 'rgba(168, 85, 247, 0.4)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(168, 85, 247, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c084fc' }}>
-              <Bot size={20} style={{ color: '#a855f7' }} />
+      <div className="glass-panel" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: 'var(--primary-alpha)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+              <Bot size={20} />
             </div>
             <div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>

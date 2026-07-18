@@ -13,9 +13,6 @@ import { DraftsStudio } from '@/pages/DraftsStudio';
 import { BroadcastQueue } from '@/pages/BroadcastQueue';
 import { Profile } from '@/pages/Profile';
 import { SettingsPage } from '@/pages/SettingsPage';
-import { AuditLogsPage } from '@/pages/AuditLogsPage';
-import { SystemTelemetryPage } from '@/pages/SystemTelemetryPage';
-import { ApiKeysPage } from '@/pages/ApiKeysPage';
 import { HelpCenterPage } from '@/pages/HelpCenterPage';
 import { NotFound } from '@/pages/NotFound';
 
@@ -52,58 +49,20 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      {
-        path: '',
-        element: <Navigate to="/dashboard" replace />,
-      },
-      {
-        path: 'dashboard',
-        element: <Dashboard />,
-      },
-      {
-        path: 'whatsapp',
-        element: <WhatsAppHub />,
-      },
-      {
-        path: 'contacts',
-        element: <Contacts />,
-      },
-      {
-        path: 'ocr',
-        element: <OcrReader />,
-      },
-      {
-        path: 'drafts',
-        element: <DraftsStudio />,
-      },
-      {
-        path: 'broadcast',
-        element: <BroadcastQueue />,
-      },
-      {
-        path: 'profile',
-        element: <Profile />,
-      },
-      {
-        path: 'settings',
-        element: <SettingsPage />,
-      },
-      {
-        path: 'audit',
-        element: <AuditLogsPage />,
-      },
-      {
-        path: 'telemetry',
-        element: <SystemTelemetryPage />,
-      },
-      {
-        path: 'api-keys',
-        element: <ApiKeysPage />,
-      },
-      {
-        path: 'help',
-        element: <HelpCenterPage />,
-      },
+      { path: '', element: <Navigate to="/dashboard" replace /> },
+      { path: 'dashboard', element: <Dashboard /> },
+      { path: 'whatsapp', element: <WhatsAppHub /> },
+      { path: 'contacts', element: <Contacts /> },
+      { path: 'ocr', element: <OcrReader /> },
+      { path: 'drafts', element: <DraftsStudio /> },
+      { path: 'broadcast', element: <BroadcastQueue /> },
+      { path: 'profile', element: <Profile /> },
+      { path: 'settings', element: <SettingsPage /> },
+      { path: 'help', element: <HelpCenterPage /> },
+      /* Stubs removidos da navegação — redirecionam para o painel */
+      { path: 'audit', element: <Navigate to="/dashboard" replace /> },
+      { path: 'telemetry', element: <Navigate to="/dashboard" replace /> },
+      { path: 'api-keys', element: <Navigate to="/dashboard" replace /> },
     ],
   },
   {

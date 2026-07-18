@@ -1176,21 +1176,17 @@ export const DraftsStudio: React.FC = () => {
         </div>
       )}
 
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Kanban size={32} style={{ color: 'var(--primary)' }} />
-            <span>Estúdio de Minutas & Rascunhos (Kanban)</span>
+      <div className="page-hero">
+        <div className="page-hero-copy">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Kanban size={28} style={{ color: 'var(--primary)' }} />
+            Minutas
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Gerencie, audite e aprove pautas instantaneamente para envio em massa no cluster BullMQ</p>
+          <p>Revise, aprove ou rejeite rascunhos antes do disparo.</p>
         </div>
-
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <Button type="button" variant="primary" icon={Plus} onClick={handleOpenCreateModal}>
-            Criar Nova Minuta
-          </Button>
-        </div>
+        <Button type="button" variant="primary" icon={Plus} onClick={handleOpenCreateModal}>
+          Nova minuta
+        </Button>
       </div>
 
       {/* Search and Filter Topbar */}

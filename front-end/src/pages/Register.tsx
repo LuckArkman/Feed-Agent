@@ -103,29 +103,11 @@ export const Register: React.FC = () => {
 
   return (
     <div className="login-screen-bg">
-      <div className="login-glass-card" style={{ maxWidth: '500px' }}>
-        {/* Brand Header */}
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            backgroundColor: 'var(--primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-glow)',
-          }}>
-            <UserPlus size={30} style={{ color: 'white' }} />
-          </div>
-          <div>
-            <h2 style={{ fontSize: '1.85rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'white' }}>
-              Novo Administrador
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Cadastre suas credenciais de segurança do sistema
-            </p>
-          </div>
+      <div className="login-screen-inner" style={{ gridTemplateColumns: '1fr', placeContent: 'center', padding: 24 }}>
+      <div className="login-glass-card" style={{ maxWidth: 460, margin: '0 auto' }}>
+        <div className="login-card-heading">
+          <h2>Criar administrador</h2>
+          <p>Cadastre a conta que gerencia contatos, minutas e disparos.</p>
         </div>
 
         {/* Error Notification */}
@@ -276,13 +258,12 @@ export const Register: React.FC = () => {
           </Button>
         </form>
 
-        {/* Back to Login Option */}
-        <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          Já possui registro?{' '}
-          <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
-            Acessar Painel
-          </Link>
+        <div className="login-footer-links">
+          <span>
+            Já tem conta? <Link to="/login">Entrar</Link>
+          </span>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -105,11 +105,11 @@ export const MainLayout: React.FC = () => {
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'white' }}>
-                Alerta de Segurança
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text-main)' }}>
+                Alerta de sessão
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '8px', lineHeight: 1.5 }}>
-                Sua sessão de segurança expirará em breve devido ao tempo limite do token corporativo JWT.
+                Sua sessão vai expirar em breve. Estenda para continuar ou saia agora.
               </p>
             </div>
 
@@ -120,12 +120,12 @@ export const MainLayout: React.FC = () => {
               gap: '10px',
               padding: '12px 24px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              backgroundColor: 'var(--surface)',
               border: '1px solid var(--border)',
             }}>
               <Clock size={18} style={{ color: 'var(--error)' }} />
-              <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'monospace', color: 'white' }}>
-                Expira em {secondsRemaining} segundos
+              <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>
+                Expira em {secondsRemaining}s
               </span>
             </div>
 
@@ -140,7 +140,7 @@ export const MainLayout: React.FC = () => {
                   borderRadius: '10px',
                   border: '1px solid var(--border)',
                   backgroundColor: 'transparent',
-                  color: 'white',
+                  color: 'var(--text-main)',
                   fontWeight: 600,
                   fontSize: '0.9rem',
                   cursor: 'pointer',
@@ -148,13 +148,10 @@ export const MainLayout: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  transition: 'background-color 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 <LogOut size={16} />
-                <span>Sair Agora</span>
+                <span>Sair</span>
               </button>
 
               <button
@@ -166,7 +163,7 @@ export const MainLayout: React.FC = () => {
                   borderRadius: '10px',
                   border: 'none',
                   backgroundColor: 'var(--primary)',
-                  color: 'white',
+                  color: 'var(--primary-ink)',
                   fontWeight: 600,
                   fontSize: '0.9rem',
                   cursor: 'pointer',
@@ -174,14 +171,10 @@ export const MainLayout: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: 'var(--shadow-glow)',
-                  transition: 'opacity 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
               >
                 <Check size={16} />
-                <span>Estender Sessão</span>
+                <span>Estender</span>
               </button>
             </div>
           </div>
