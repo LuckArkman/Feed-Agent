@@ -13,7 +13,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "validate:modal": "node scripts/validate-connection-modal.mjs",
-    "generate:brand": "node scripts/generate-brand-assets.mjs"
+    "generate:brand": "node scripts/build-zb-official.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.10",
@@ -43,8 +43,10 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "imagetracerjs": "^1.2.6",
     "jsdom": "^29.1.1",
     "playwright": "^1.61.1",
+    "sharp": "^0.35.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",

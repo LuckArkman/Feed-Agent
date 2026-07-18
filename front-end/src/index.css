@@ -779,7 +779,11 @@ a {
 }
 
 .brand-mark__zap {
-  color: var(--text-main);
+  color: #ffffff;
+}
+
+[data-theme='light'] .brand-mark__zap {
+  color: #0a1628;
 }
 
 .brand-mark__business {

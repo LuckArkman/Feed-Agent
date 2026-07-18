@@ -1,141 +1,95 @@
-# RELATÓRIO 0.1.4 — Nova identidade visual ZapBusiness (monograma ZB)
+# RELATÓRIO 0.1.4 — Nova identidade visual ZapBusiness (monograma ZB oficial)
 
-**Marco:** Milestone 0.1.4  
+**Marco:** Milestone 0.1.4 (vetorização fiel)  
 **Branch:** `Front`  
-**Escopo:** Identidade visual oficial baseada na referência do monograma ZB (reconstrução vetorial).  
-**Fora de escopo:** backend, banco, API, QR, WhatsApp, lógica de negócio.
+**Fonte de verdade:** `front-end/src/assets/brand/reference-official.png`  
+**Método:** traço da silhueta oficial → SVG fill + gradiente amostrado + acabamento de dobra
 
 ---
 
-## Resumo
+## Princípio
 
-A identidade provisória (símbolo genérico) foi substituída pelo **monograma ZB oficial**, reconstruído em SVG com:
-
-- Z como estrutura (barra superior, **canto vivo** superior direito, diagonal)
-- B nascendo da curva inferior do Z, com dois lóbulos em D à direita
-- Gradiente ciano → azul royal sobre fundo navy
-- Wordmark **ZapBusiness** (Zap claro / Business em azul); LCM apenas em copyright/rodapé
+A imagem anexada é a **identidade oficial**, não inspiração.  
+O SVG reproduz a mesma geometria (Z, B, encaixe, inclinação, curvas, espessuras).  
+Sem novo conceito, sem balões, sem raios, sem “by LCM” na marca.
 
 ---
 
 ## Assets gerados
 
-### Vetores (`front-end/src/assets/brand/`)
+### Símbolos e logos (`front-end/src/assets/brand/`)
 
-| Arquivo | Uso |
-|---------|-----|
-| `zb-monogram.svg` | Símbolo sem fundo |
-| `symbol.svg` / `app-icon.svg` / `zapbusiness-symbol.svg` | App icon (navy + ZB) |
-| `logo-horizontal.svg` / `logo-dark.svg` / `zapbusiness-logo*.svg` | Logo horizontal (tema escuro) |
-| `logo-horizontal-light.svg` / `logo-light.svg` | Logo horizontal (tema claro) |
-| `logo-vertical.svg` / `logo-vertical-light.svg` | Logo vertical |
-| `symbol-mono-light.svg` / `symbol-mono-dark.svg` | Monocromático |
-| `symbol-outline.svg` | Outline |
-| `app-icon-512.png` / `zb-monogram-512.png` | Preview raster |
-| `logo-horizontal-dark.png` / `logo-horizontal-light.png` / `logo-vertical-dark.png` | Export PNG logos |
+| Arquivo | Descrição |
+|---------|-----------|
+| `zb-symbol.svg` | Símbolo oficial (fundo navy + ZB) |
+| `zb-symbol-dark.svg` | Versão escura (app icon) |
+| `zb-symbol-light.svg` | Símbolo sem fundo (temas claros / overlays) |
+| `zb-horizontal.svg` | Logo horizontal ZapBusiness |
+| `zb-vertical.svg` | Logo vertical ZapBusiness |
+| `zb-monogram.svg` | Monograma sem fundo |
+| `app-icon-{128,192,256,512}.png` | App icons raster |
+| `reference-official.png` | Referência oficial commitada |
 
 ### Públicos (`front-end/public/`)
 
 | Arquivo | Uso |
 |---------|-----|
-| `favicon.svg` | Favicon vetorial (versão otimizada small) |
-| `favicon.ico` | Favicon legado (32px) |
-| `favicon-16.png` … `favicon-64.png` | Favicons PNG |
-| `apple-touch-icon.png` / `.svg` | Apple Touch (180) |
-| `pwa-192x192.png` / `pwa-512x512.png` (+ SVG) | PWA |
-| `android-chrome-192x192.png` / `android-chrome-512x512.png` | Android |
-| `app-icon-512.png` | App icon raster |
-| `manifest.webmanifest` | Manifest com ícones PNG/SVG |
+| `favicon.svg` / `favicon.ico` | Favicon |
+| `favicon-{16,32,48,64}.png` | Favicon PNG |
+| `app-icon-{128,192,256,512}.png` | App icons |
+| `apple-touch-icon.png` | Apple (180) |
+| `pwa-*` / `android-chrome-*` | PWA / Android |
+| `manifest.webmanifest` | Manifest |
 
-### Geração
+### Regeneração
 
 ```bash
+cd front-end
 npm run generate:brand
 ```
 
-Script: `front-end/scripts/generate-brand-assets.mjs` (SVG + raster via Playwright).
+Script: `scripts/build-zb-official.mjs` (sharp + imagetracerjs + Playwright).
 
 ---
 
 ## Locais substituídos
 
-| Superfície | Como |
-|------------|------|
-| Sidebar (aberta / recolhida) | `BrandMark` → `symbol.svg` |
-| Login | `BrandMark` + wordmark |
-| Loading / Splash | `StateViews` → `symbol.svg` |
-| Header | Títulos via `BRAND` / `PAGE_TITLES` |
-| Favicon | `index.html` (ICO + SVG + PNG 16/32/48) |
-| PWA / Android | `manifest.webmanifest` |
-| Apple Touch | `apple-touch-icon.png` |
-| Meta / Document title | `index.html` + `useDocumentBrand` / `BRAND` |
-| Copyright | LCM apenas via `BrandCopyright` / rodapé |
+| Superfície | Integração |
+|------------|------------|
+| Sidebar | `BrandMark` → `zb-symbol.svg` |
+| Login | `BrandMark` |
+| Splash / Loading | `StateViews` → `zb-symbol.svg` |
+| Header / Document title | `BRAND` / `useDocumentBrand` |
+| Favicon / PWA / Apple / Android | `index.html` + `manifest.webmanifest` + `public/*` |
+| Copyright | Somente `BrandCopyright` / rodapé LCM |
+
+Wordmark UI: **Zap** `#FFFFFF` (dark) / **Business** azul da identidade. Sem subtítulo.
 
 ---
 
-## Arquivos alterados
+## Validação visual
 
-- `front-end/scripts/generate-brand-assets.mjs` (novo/atualizado)
-- `front-end/src/assets/brand/*` (suite ZB)
-- `front-end/public/favicon*` / `pwa-*` / `apple-touch-icon*` / `android-chrome-*` / `manifest.webmanifest`
-- `front-end/index.html`
-- `front-end/src/components/BrandMark.tsx`
-- `front-end/src/config/brand.ts`
-- `front-end/src/index.css` (peso tipográfico do wordmark → SemiBold 600)
-- `front-end/package.json` (`generate:brand`)
-- `RELATORIO-0.1.4-NOVA-IDENTIDADE.md`
+Comparação lado a lado referência × SVG: geometria, proporção, encaixe Z+B e leitura preservados.  
+Diferenças esperadas: arestas vetoriais nítidas vs. raster suave; gradiente vetorial limpo.
 
-**Não alterados:** backend, APIs, auth, WhatsApp/QR, broadcast, responsividade estrutural.
+Testes: typecheck, lint, vitest, build.
 
 ---
 
-## Validação
+## Arquivos principais alterados
 
-| Cenário | Resultado |
-|---------|-----------|
-| Sidebar aberta | Marca ZB + ZapBusiness |
-| Sidebar recolhida | Apenas símbolo ZB |
-| Login | Marca + wordmark; sem “by LCM” no logo |
-| Header / document title | ZapBusiness |
-| Favicon / PWA / Apple | Novos assets |
-| Dark / Light | Logos dark/light + tokens LCM existentes |
-| Testes unitários marca | `brand.test.tsx` (ZapBusiness, copyright LCM) |
+- `scripts/build-zb-official.mjs`
+- `src/assets/brand/zb-*.svg` + rasters + `reference-official.png`
+- `public/favicon*` / `app-icon-*` / PWA / manifest
+- `BrandMark.tsx`, `StateViews.tsx`, `index.css`, `brand.ts`, `index.html`
+- `package.json` (deps: `sharp`, `imagetracerjs`)
 
-Comandos sugeridos:
-
-```bash
-cd front-end
-npm run lint
-npm run typecheck
-npm run test:run
-npm run build
-```
-
----
-
-## Responsividade
-
-- Símbolo 36px (sidebar) / compacto no colapso — legível
-- Favicon 16–64 com traço levemente mais grosso (`monogramSmall`)
-- App icon / PWA 192–512 mantém padding navy + squircle
-- Sem mudança de breakpoints de layout
-
----
-
-## Critérios de marca respeitados
-
-- Referência oficial reconstruída (não novo conceito)
-- Sem “by LCM” / Enterprise no logo
-- Sem glow exagerado, neon, metal ou 3D pesado
-- Paleta: navy / royal / elétrico / ciano
-- Wordmark: Zap + Business (Business em azul)
+**Não alterados:** backend, API, QR, WhatsApp, lógica de negócio.
 
 ---
 
 ## Commit
 
 ```
-feat(brand): aplica identidade oficial ZB do ZapBusiness
+feat(brand): vetoriza monograma oficial ZB do ZapBusiness
 ```
-
-Sem push. Sem merge.

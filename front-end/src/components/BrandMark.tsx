@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BRAND } from '@/config/brand';
-import symbolUrl from '@/assets/brand/symbol.svg';
+import symbolUrl from '@/assets/brand/zb-symbol.svg';
 
 interface BrandMarkProps {
   compact?: boolean;
