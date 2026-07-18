@@ -57,6 +57,14 @@ interface Contact {
   dateAdded: string;
 }
 
+interface ApiContact {
+  id: number | string;
+  name: string;
+  phoneNumber: string;
+  active: boolean;
+  createdAt: string;
+}
+
 interface ParsedRow {
   index: number;
   name: string;
@@ -120,12 +128,12 @@ export const Contacts: React.FC = () => {
     try {
       const res = await apiClient.get('/contacts?page=1&limit=1000');
       if (res.data?.success) {
-        const mapped = res.data.data.data.map((c: any) => ({
+        const mapped = (res.data.data.data as ApiContact[]).map((c) => ({
           id: String(c.id),
           name: c.name,
           phone: c.phoneNumber,
-          status: c.active ? 'Ativo' : 'Inativo',
-          category: 'Geral', // Backend may not support categories yet
+          status: (c.active ? 'Ativo' : 'Inativo') as Contact['status'],
+          category: 'Geral' as Contact['category'], // Backend may not support categories yet
           dateAdded: new Date(c.createdAt).toLocaleDateString('pt-BR'),
         }));
         setContacts(mapped);
@@ -136,7 +144,11 @@ export const Contacts: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchContacts();
+    // Defer fetch so setState after await is not treated as sync effect cascade
+    const boot = window.setTimeout(() => {
+      void fetchContacts();
+    }, 0);
+    return () => window.clearTimeout(boot);
   }, []);
 
   // Debouncing effect (300ms) for Search
@@ -153,7 +165,8 @@ export const Contacts: React.FC = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    setCurrentPage(1);
+    const boot = window.setTimeout(() => setCurrentPage(1), 0);
+    return () => window.clearTimeout(boot);
   }, [statusFilter, categoryFilter, itemsPerPage]);
 
   // Memoized Filtered and Sorted Contacts
@@ -178,8 +191,8 @@ export const Contacts: React.FC = () => {
     }
 
     result.sort((a, b) => {
-      let valA = a[sortField];
-      let valB = b[sortField];
+      const valA = a[sortField];
+      const valB = b[sortField];
 
       if (sortField === 'dateAdded') {
         const partsA = a.dateAdded.split('/');
@@ -238,7 +251,7 @@ export const Contacts: React.FC = () => {
       showToast.success(`Operação em Lote Concluída: Status de ${selectedIds.length} contatos alterado para ${newStatus}.`);
       setSelectedIds([]);
       fetchContacts();
-    } catch (error) {
+    } catch {
       showToast.error('Erro ao alterar status em massa.');
     } finally {
       setIsBulking(false);
@@ -257,7 +270,7 @@ export const Contacts: React.FC = () => {
       setSelectedIds([]);
       setShowBulkDeleteModal(false);
       fetchContacts();
-    } catch (error) {
+    } catch {
       showToast.error('Erro ao excluir contatos em massa.');
     } finally {
       setIsBulking(false);
@@ -275,7 +288,7 @@ export const Contacts: React.FC = () => {
 
     const link = document.createElement('a');
     link.setAttribute('href', csvContent);
-    link.setAttribute('download', `contatos-feedagent-${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `contatos-zapbusiness-${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -433,7 +446,7 @@ export const Contacts: React.FC = () => {
   const checkPhoneValidity = (phone: string) => {
     const digits = phone.replace(/\D/g, '');
     if (digits.length === 12 || digits.length === 13) return { valid: true, text: 'Formato Internacional Válido (DDI + DDD + Celular)', color: 'var(--success)' };
-    else if (digits.length > 0 && digits.length < 12) return { valid: false, text: `Incompleto: Faltam dígitos (Atual: ${digits.length}/13)`, color: '#eab308' };
+    else if (digits.length > 0 && digits.length < 12) return { valid: false, text: `Incompleto: Faltam dígitos (Atual: ${digits.length}/13)`, color: 'var(--warning)' };
     else return { valid: false, text: 'Digite o DDD e o número do celular', color: 'var(--text-muted)' };
   };
 
@@ -464,7 +477,7 @@ export const Contacts: React.FC = () => {
       await fetchContacts();
       setShowEditModal(false);
       setEditingContact(null);
-    } catch (error) {
+    } catch {
       showToast.error('Erro ao salvar o contato. Verifique os dados e tente novamente.');
     } finally {
       setIsSaving(false);
@@ -476,7 +489,7 @@ export const Contacts: React.FC = () => {
       await apiClient.delete(`/contacts/${id}`);
       showToast.success(`Contato "${name}" excluído com sucesso.`);
       fetchContacts();
-    } catch (error) {
+    } catch {
       showToast.error('Erro ao excluir o contato.');
     }
   };
@@ -490,7 +503,7 @@ export const Contacts: React.FC = () => {
       await apiClient.put(`/contacts/${id}`, { active: nextStat === 'Ativo' });
       showToast.info(`O status foi alterado para ${nextStat}.`);
       fetchContacts();
-    } catch (error) {
+    } catch {
       showToast.error('Erro ao alterar status.');
     }
   };
@@ -563,11 +576,11 @@ export const Contacts: React.FC = () => {
         }}>
           <div className="glass-panel" style={{
             maxWidth: '520px', width: '100%', padding: '36px', display: 'flex', flexDirection: 'column', gap: '24px',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)', border: '1px solid rgba(99, 102, 241, 0.4)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)', border: '1px solid color-mix(in srgb, var(--primary) 40%, transparent)',
             animation: 'scale-up 0.2s ease-out',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <UserCheck size={24} style={{ color: 'var(--primary)' }} />
                 <span>{contacts.some(c => c.id === editingContact.id) ? 'Editar Contato' : 'Cadastrar Novo Contato'}</span>
               </h3>
@@ -580,7 +593,7 @@ export const Contacts: React.FC = () => {
                   <span>Nome Completo</span>
                   <span style={{ color: 'var(--error)' }}>*Obrigatório</span>
                 </label>
-                <input type="text" placeholder="Ex: Maria de Souza" value={editingContact.name} onChange={e => setEditingContact({ ...editingContact, name: e.target.value })} disabled={isSaving} style={{ height: '46px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px', color: 'white', fontSize: '0.95rem' }} />
+                <input type="text" placeholder="Ex: Maria de Souza" value={editingContact.name} onChange={e => setEditingContact({ ...editingContact, name: e.target.value })} disabled={isSaving} style={{ height: '46px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px', color: 'var(--text-main)', fontSize: '0.95rem' }} />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -589,7 +602,7 @@ export const Contacts: React.FC = () => {
                   <span style={{ color: 'var(--error)' }}>*Obrigatório</span>
                 </label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <input type="text" placeholder="+55 (11) 98888-7777" value={editingContact.phone} onChange={e => handleModalPhoneChange(e.target.value)} disabled={isSaving} style={{ width: '100%', height: '46px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px 0 44px', color: 'white', fontFamily: 'monospace', fontSize: '0.95rem' }} />
+                  <input type="text" placeholder="+55 (11) 98888-7777" value={editingContact.phone} onChange={e => handleModalPhoneChange(e.target.value)} disabled={isSaving} style={{ width: '100%', height: '46px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px 0 44px', color: 'var(--text-main)', fontFamily: 'monospace', fontSize: '0.95rem' }} />
                   <Phone size={18} style={{ position: 'absolute', left: '16px', color: 'var(--text-muted)' }} />
                 </div>
                 {currentValidity && (
@@ -603,19 +616,19 @@ export const Contacts: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Categoria da Lista</label>
-                  <select value={editingContact.category} onChange={e => setEditingContact({ ...editingContact, category: e.target.value as Contact['category'] })} disabled={isSaving} style={{ height: '46px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px', color: 'white', fontSize: '0.95rem' }}>
-                    <option value="Geral" style={{ background: '#0f172a' }}>Geral</option>
-                    <option value="VIP" style={{ background: '#0f172a' }}>VIP</option>
-                    <option value="Cliente" style={{ background: '#0f172a' }}>Cliente</option>
-                    <option value="Imprensa" style={{ background: '#0f172a' }}>Imprensa</option>
+                  <select value={editingContact.category} onChange={e => setEditingContact({ ...editingContact, category: e.target.value as Contact['category'] })} disabled={isSaving} style={{ height: '46px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px', color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                    <option value="Geral" style={{ background: 'var(--surface)' }}>Geral</option>
+                    <option value="VIP" style={{ background: 'var(--surface)' }}>VIP</option>
+                    <option value="Cliente" style={{ background: 'var(--surface)' }}>Cliente</option>
+                    <option value="Imprensa" style={{ background: 'var(--surface)' }}>Imprensa</option>
                   </select>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Status de Disparo</label>
-                  <div onClick={() => { if (!isSaving) setEditingContact({ ...editingContact, status: editingContact.status === 'Ativo' ? 'Inativo' : 'Ativo' }); }} style={{ height: '46px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: isSaving ? 'not-allowed' : 'pointer', userSelect: 'none' }}>
+                  <div onClick={() => { if (!isSaving) setEditingContact({ ...editingContact, status: editingContact.status === 'Ativo' ? 'Inativo' : 'Ativo' }); }} style={{ height: '46px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: isSaving ? 'not-allowed' : 'pointer', userSelect: 'none' }}>
                     <span style={{ fontSize: '0.95rem', fontWeight: 600, color: editingContact.status === 'Ativo' ? 'var(--success)' : 'var(--text-muted)' }}>{editingContact.status === 'Ativo' ? 'Ativo (Permitido)' : 'Inativo (Pausado)'}</span>
-                    <div style={{ width: '40px', height: '22px', borderRadius: '11px', backgroundColor: editingContact.status === 'Ativo' ? 'var(--success)' : 'rgba(255,255,255,0.1)', padding: '2px', display: 'flex', alignItems: 'center', transition: 'all 0.3s', justifyContent: editingContact.status === 'Ativo' ? 'flex-end' : 'flex-start' }}><div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} /></div>
+                    <div style={{ width: '40px', height: '22px', borderRadius: '11px', backgroundColor: editingContact.status === 'Ativo' ? 'var(--success)' : 'color-mix(in srgb, var(--border) 40%, transparent)', padding: '2px', display: 'flex', alignItems: 'center', transition: 'all 0.3s', justifyContent: editingContact.status === 'Ativo' ? 'flex-end' : 'flex-start' }}><div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'var(--text-main)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} /></div>
                   </div>
                 </div>
               </div>
@@ -639,25 +652,25 @@ export const Contacts: React.FC = () => {
         }}>
           <div className="glass-panel" style={{
             maxWidth: '460px', width: '100%', padding: '36px', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', textAlign: 'center', gap: '24px', border: '1px solid rgba(239, 68, 68, 0.4)',
+            alignItems: 'center', textAlign: 'center', gap: '24px', border: '1px solid color-mix(in srgb, var(--error) 40%, transparent)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
           }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'color-mix(in srgb, var(--error) 10%, transparent)', color: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <AlertTriangle size={32} />
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white' }}>Confirmar Exclusão em Lote</h3>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)' }}>Confirmar Exclusão em Lote</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '8px', lineHeight: 1.5 }}>
-                Você está prestes a excluir permanentemente <strong style={{ color: 'white' }}>{selectedIds.length} contato(s)</strong> selecionado(s) da base. Esta ação não poderá ser desfeita.
+                Você está prestes a excluir permanentemente <strong style={{ color: 'var(--text-main)' }}>{selectedIds.length} contato(s)</strong> selecionado(s) da base. Esta ação não poderá ser desfeita.
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '8px' }}>
-              <button type="button" onClick={() => setShowBulkDeleteModal(false)} disabled={isBulking} style={{ flex: 1, height: '46px', borderRadius: '10px', border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'white', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'background-color 0.2s' }}>
+              <button type="button" onClick={() => setShowBulkDeleteModal(false)} disabled={isBulking} style={{ flex: 1, height: '46px', borderRadius: '10px', border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'var(--text-main)', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'background-color 0.2s' }}>
                 Cancelar
               </button>
-              <button type="button" onClick={handleConfirmBulkDelete} disabled={isBulking} style={{ flex: 1, height: '46px', borderRadius: '10px', border: 'none', backgroundColor: 'var(--error)', color: 'white', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)' }}>
+              <button type="button" onClick={handleConfirmBulkDelete} disabled={isBulking} style={{ flex: 1, height: '46px', borderRadius: '10px', border: 'none', backgroundColor: 'var(--error)', color: 'var(--text-main)', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 0 20px color-mix(in srgb, var(--error) 40%, transparent)' }}>
                 {isBulking ? <RefreshCw size={16} className="animate-spin" /> : <Trash2 size={16} />}
                 <span>{isBulking ? 'Processando Lote...' : `Sim, Excluir ${selectedIds.length}`}</span>
               </button>
@@ -671,17 +684,17 @@ export const Contacts: React.FC = () => {
         <div style={{
           position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 5000,
           width: 'calc(100% - 48px)', maxWidth: '800px', padding: '16px 24px',
-          backgroundColor: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-          borderRadius: '16px', border: '1px solid var(--primary)', boxShadow: '0 20px 60px rgba(99, 102, 241, 0.3)',
+          backgroundColor: 'color-mix(in srgb, var(--surface) 95%, transparent)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+          borderRadius: '16px', border: '1px solid var(--primary)', boxShadow: '0 20px 60px color-mix(in srgb, var(--primary) 30%, transparent)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px',
           animation: 'slide-up 0.3s ease-out',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'color-mix(in srgb, var(--primary) 20%, transparent)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
               {selectedIds.length}
             </div>
             <div>
-              <span style={{ fontWeight: 700, color: 'white', fontSize: '1rem', display: 'block' }}>Contatos Selecionados em Lote</span>
+              <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '1rem', display: 'block' }}>Contatos Selecionados em Lote</span>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Escolha uma operação para aplicar simultaneamente</span>
             </div>
           </div>
@@ -690,7 +703,7 @@ export const Contacts: React.FC = () => {
             <Button type="button" variant="secondary" onClick={() => handleBulkStatusChange('Ativo')} disabled={isBulking} style={{ height: '38px', fontSize: '0.85rem', borderColor: 'var(--success)', color: 'var(--success)' }}>
               {isBulking ? 'Aguarde...' : 'Ativar Selecionados'}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => handleBulkStatusChange('Inativo')} disabled={isBulking} style={{ height: '38px', fontSize: '0.85rem', borderColor: '#eab308', color: '#eab308' }}>
+            <Button type="button" variant="secondary" onClick={() => handleBulkStatusChange('Inativo')} disabled={isBulking} style={{ height: '38px', fontSize: '0.85rem', borderColor: 'var(--warning)', color: 'var(--warning)' }}>
               {isBulking ? 'Aguarde...' : 'Desativar'}
             </Button>
             <Button type="button" variant="primary" onClick={() => setShowBulkDeleteModal(true)} disabled={isBulking} style={{ height: '38px', fontSize: '0.85rem', backgroundColor: 'var(--error)', borderColor: 'var(--error)' }}>
@@ -703,40 +716,38 @@ export const Contacts: React.FC = () => {
         </div>
       )}
 
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Users size={32} style={{ color: 'var(--primary)' }} />
-            <span>Gerenciamento de Contatos</span>
+      <div className="page-hero">
+        <div className="page-hero-copy">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Users size={28} style={{ color: 'var(--primary)' }} />
+            Contatos
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Cadastre, pesquise, analise métricas e gerencie os destinatários das campanhas</p>
+          <p>Cadastre, importe CSV e gerencie destinatários dos disparos.</p>
         </div>
-
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <Button type="button" variant="secondary" icon={BarChart3} onClick={() => setShowAnalytics(prev => !prev)}>
-            {showAnalytics ? 'Ocultar Estatísticas' : 'Painel de Métricas'}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Button type="button" variant="secondary" icon={BarChart3} onClick={() => setShowAnalytics((prev) => !prev)}>
+            {showAnalytics ? 'Ocultar métricas' : 'Métricas'}
           </Button>
-          <Button type="button" variant="secondary" icon={UploadCloud} onClick={() => setShowImportPanel(prev => !prev)}>
-            {showImportPanel ? 'Ocultar Importador' : 'Importar CSV Planilha'}
+          <Button type="button" variant="secondary" icon={UploadCloud} onClick={() => setShowImportPanel((prev) => !prev)}>
+            {showImportPanel ? 'Ocultar importação' : 'Importar CSV'}
           </Button>
           <Button type="button" variant="secondary" icon={Download} onClick={handleExportCSV}>
-            Exportar CSV
+            Exportar
           </Button>
           <Button type="button" variant="primary" icon={Plus} onClick={handleOpenNewModal}>
-            Novo Contato
+            Novo contato
           </Button>
         </div>
       </div>
 
       {/* Advanced Drag-and-Drop CSV Import Panel */}
       {showImportPanel && (
-        <div className="glass-panel" style={{ padding: '36px', display: 'flex', flexDirection: 'column', gap: '28px', border: '1px solid rgba(99, 102, 241, 0.3)', animation: 'slide-down 0.3s ease-out' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div className="glass-panel" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FileSpreadsheet size={24} style={{ color: 'var(--primary)' }} />
-                <span>Importador e Validador de Planilhas CSV</span>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FileSpreadsheet size={22} style={{ color: 'var(--primary)' }} />
+                <span>Importar CSV</span>
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
                 Arraste seu arquivo .csv estruturado ou baixe a planilha modelo para padronizar o cadastro em lote.
@@ -755,17 +766,17 @@ export const Contacts: React.FC = () => {
             onClick={() => fileInputRef.current?.click()}
             style={{
               border: `2px dashed ${isDragging ? 'var(--primary)' : 'var(--border)'}`,
-              borderRadius: '16px', padding: '48px 24px', backgroundColor: isDragging ? 'rgba(99, 102, 241, 0.05)' : 'rgba(255, 255, 255, 0.01)',
+              borderRadius: '16px', padding: '48px 24px', backgroundColor: isDragging ? 'color-mix(in srgb, var(--primary) 5%, transparent)' : 'color-mix(in srgb, var(--border) 10%, transparent)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '16px',
               cursor: 'pointer', transition: 'all 0.2s',
             }}
           >
             <input type="file" ref={fileInputRef} accept=".csv" onChange={e => e.target.files && e.target.files[0] && handleProcessCsvFile(e.target.files[0])} style={{ display: 'none' }} />
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <UploadCloud size={32} />
             </div>
             <div>
-              <span style={{ fontWeight: 700, color: 'white', fontSize: '1.1rem', display: 'block' }}>
+              <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '1.1rem', display: 'block' }}>
                 {importFileName ? `Arquivo Selecionado: ${importFileName}` : 'Arraste seu arquivo CSV ou clique para buscar'}
               </span>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
@@ -775,7 +786,7 @@ export const Contacts: React.FC = () => {
           </div>
 
           {parsedRows.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', backgroundColor: 'color-mix(in srgb, var(--border) 15%, transparent)', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ display: 'flex', gap: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--success)' }}>
@@ -801,18 +812,18 @@ export const Contacts: React.FC = () => {
                     <span>Processando e inserindo lote...</span>
                     <span style={{ fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>{importProgress}%</span>
                   </div>
-                  <div style={{ width: '100%', height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: '8px', backgroundColor: 'color-mix(in srgb, var(--border) 30%, transparent)', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{ width: `${importProgress}%`, height: '100%', backgroundColor: 'var(--primary)', transition: 'width 0.2s linear' }} />
                   </div>
                 </div>
               )}
 
               {invalidCount > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', padding: '12px', borderRadius: '8px', backgroundColor: 'color-mix(in srgb, var(--error) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--error) 20%, transparent)' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--error)' }}>Inconsistências encontradas nas linhas:</span>
                   {parsedRows.filter(r => !r.valid).slice(0, 10).map(row => (
                     <div key={row.index} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '12px' }}>
-                      <span style={{ fontWeight: 600, color: 'white' }}>Linha #{row.index}:</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Linha #{row.index}:</span>
                       <span>{row.errors.join(', ')} (Valor: &quot;{row.name}&quot; / &quot;{row.phone}&quot;)</span>
                     </div>
                   ))}
@@ -832,7 +843,7 @@ export const Contacts: React.FC = () => {
           <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Activity size={22} style={{ color: 'var(--primary)' }} />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>Taxa de Conformidade e Status</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Taxa de Conformidade e Status</h3>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
@@ -852,11 +863,11 @@ export const Contacts: React.FC = () => {
                       dataKey="value"
                     >
                       <Cell fill="var(--success)" />
-                      <Cell fill="#eab308" />
+                      <Cell fill="var(--warning)" />
                     </Pie>
                     <RechartsTooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid var(--border)', borderRadius: '8px', color: 'white' }}
-                      itemStyle={{ color: 'white' }}
+                      contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-main)' }}
+                      itemStyle={{ color: 'var(--text-main)' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -868,15 +879,15 @@ export const Contacts: React.FC = () => {
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Contatos Ativos</span>
                   </div>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white' }}>{statsData.activeRate}% <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'var(--text-muted)' }}>({statsData.active})</span></span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)' }}>{statsData.activeRate}% <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'var(--text-muted)' }}>({statsData.active})</span></span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#eab308' }} />
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--warning)' }} />
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pausados / Inativos</span>
                   </div>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white' }}>{statsData.inactiveRate}% <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'var(--text-muted)' }}>({statsData.inactive})</span></span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)' }}>{statsData.inactiveRate}% <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'var(--text-muted)' }}>({statsData.inactive})</span></span>
                 </div>
               </div>
             </div>
@@ -886,7 +897,7 @@ export const Contacts: React.FC = () => {
           <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <TrendingUp size={22} style={{ color: 'var(--primary)' }} />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>Evolução de Cadastros (Novas Inscrições)</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Evolução de Cadastros (Novas Inscrições)</h3>
             </div>
 
             <div style={{ width: '100%', height: '140px' }}>
@@ -895,7 +906,7 @@ export const Contacts: React.FC = () => {
                   <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} width={28} />
                   <RechartsTooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid var(--border)', borderRadius: '8px', color: 'white' }} 
+                    contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-main)' }} 
                     itemStyle={{ color: 'var(--primary)' }}
                   />
                   <Line type="monotone" dataKey="NovasInscricoes" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--primary)' }} activeDot={{ r: 6 }} />
@@ -908,14 +919,14 @@ export const Contacts: React.FC = () => {
           <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Award size={22} style={{ color: 'var(--primary)' }} />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>Destinatários com Mais Disparos</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Destinatários com Mais Disparos</h3>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {statsData.topContacts.map(tc => (
-                <div key={tc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '8px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
+                <div key={tc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '8px', backgroundColor: 'color-mix(in srgb, var(--border) 15%, transparent)', border: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>{tc.name}</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>{tc.name}</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Último: {tc.lastDelivery}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -940,9 +951,9 @@ export const Contacts: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
-                width: '100%', height: '46px', backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                width: '100%', height: '46px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)',
                 border: '1px solid var(--border)', borderRadius: '10px', padding: '0 16px 0 44px',
-                color: 'white', fontSize: '0.95rem',
+                color: 'var(--text-main)', fontSize: '0.95rem',
               }}
             />
             <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--text-muted)' }} />
@@ -957,7 +968,7 @@ export const Contacts: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Filter size={16} style={{ color: 'var(--text-muted)' }} />
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Status:</span>
-              <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', gap: '4px', background: 'color-mix(in srgb, var(--border) 20%, transparent)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 {(['Todos', 'Ativo', 'Inativo'] as const).map(st => (
                   <button
                     key={st}
@@ -981,27 +992,27 @@ export const Contacts: React.FC = () => {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                style={{ height: '36px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 12px', color: 'white', fontSize: '0.85rem' }}
+                style={{ height: '36px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 12px', color: 'var(--text-main)', fontSize: '0.85rem' }}
               >
-                <option value="Todas" style={{ background: '#0f172a' }}>Todas as Categorias</option>
-                <option value="VIP" style={{ background: '#0f172a' }}>VIP</option>
-                <option value="Cliente" style={{ background: '#0f172a' }}>Cliente</option>
-                <option value="Imprensa" style={{ background: '#0f172a' }}>Imprensa</option>
-                <option value="Geral" style={{ background: '#0f172a' }}>Geral</option>
+                <option value="Todas" style={{ background: 'var(--surface)' }}>Todas as Categorias</option>
+                <option value="VIP" style={{ background: 'var(--surface)' }}>VIP</option>
+                <option value="Cliente" style={{ background: 'var(--surface)' }}>Cliente</option>
+                <option value="Imprensa" style={{ background: 'var(--surface)' }}>Imprensa</option>
+                <option value="Geral" style={{ background: 'var(--surface)' }}>Geral</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Datatable */}
+      {/* Main Datatable + mobile cards */}
       <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <div className="table-scroll contacts-desktop-table">
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 720 }}>
             <thead>
-              <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '16px', width: '48px', textAlign: 'center' }}>
-                  <button type="button" onClick={handleSelectAll} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <tr style={{ backgroundColor: 'color-mix(in srgb, var(--border) 35%, transparent)', borderBottom: '1px solid var(--border)' }}>
+                <th style={{ padding: '14px', width: '48px', textAlign: 'center' }}>
+                  <button type="button" onClick={handleSelectAll} aria-label="Selecionar todos" style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
                     {selectedIds.length === paginatedContacts.length && paginatedContacts.length > 0 ? (
                       <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
                     ) : (
@@ -1009,34 +1020,23 @@ export const Contacts: React.FC = () => {
                     )}
                   </button>
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('name')}>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('name')}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Nome do Destinatário</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'name' ? 'var(--primary)' : 'var(--text-muted)' }} />
+                    <span>Nome</span>
+                    <ArrowUpDown size={14} aria-hidden style={{ color: sortField === 'name' ? 'var(--primary)' : 'var(--text-muted)' }} />
                   </div>
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  Número de WhatsApp
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>WhatsApp</th>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('category')}>
+                  Categoria
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('category')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Categoria</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'category' ? 'var(--primary)' : 'var(--text-muted)' }} />
-                  </div>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                  Status
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('status')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Status de Disparo</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'status' ? 'var(--primary)' : 'var(--text-muted)' }} />
-                  </div>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('dateAdded')}>
+                  Cadastro
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('dateAdded')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Data de Cadastro</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'dateAdded' ? 'var(--primary)' : 'var(--text-muted)' }} />
-                  </div>
-                </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>
                   Ações
                 </th>
               </tr>
@@ -1045,7 +1045,7 @@ export const Contacts: React.FC = () => {
               {paginatedContacts.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    Nenhum contato encontrado com os filtros e termos de busca especificados.
+                    Nenhum contato encontrado com os filtros atuais.
                   </td>
                 </tr>
               ) : (
@@ -1056,39 +1056,30 @@ export const Contacts: React.FC = () => {
                       key={contact.id}
                       style={{
                         borderBottom: '1px solid var(--border)',
-                        backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.05)' : 'transparent',
-                        transition: 'background-color 0.2s',
+                        backgroundColor: isSelected ? 'var(--primary-alpha)' : 'transparent',
                       }}
                     >
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <button type="button" onClick={() => handleSelectOne(contact.id)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
-                          {isSelected ? (
-                            <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
-                          ) : (
-                            <Square size={18} style={{ color: 'var(--text-muted)' }} />
-                          )}
+                      <td style={{ padding: '14px', textAlign: 'center' }}>
+                        <button type="button" onClick={() => handleSelectOne(contact.id)} aria-label={`Selecionar ${contact.name}`} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                          {isSelected ? <CheckSquare size={18} style={{ color: 'var(--primary)' }} /> : <Square size={18} style={{ color: 'var(--text-muted)' }} />}
                         </button>
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 600, color: 'white', fontSize: '0.95rem' }}>{contact.name}</span>
+                      <td style={{ padding: '14px', minWidth: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                          <span className="truncate" style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }} title={contact.name}>{contact.name}</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {contact.id}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', fontFamily: 'monospace', fontSize: '0.95rem', color: '#cbd5e1' }}>
+                      <td className="text-break" style={{ padding: '14px', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--text-main)' }}>
                         {contact.phone}
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <Badge variant={getCategoryBadgeVariant(contact.category)}>
-                          {contact.category}
-                        </Badge>
+                      <td style={{ padding: '14px' }}>
+                        <Badge variant={getCategoryBadgeVariant(contact.category)}>{contact.category}</Badge>
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <Badge variant={contact.status === 'Ativo' ? 'success' : 'warning'}>
-                          {contact.status}
-                        </Badge>
+                      <td style={{ padding: '14px' }}>
+                        <Badge variant={contact.status === 'Ativo' ? 'success' : 'warning'}>{contact.status}</Badge>
                       </td>
-                      <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                      <td style={{ padding: '14px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                         {contact.dateAdded}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }}>
@@ -1097,7 +1088,7 @@ export const Contacts: React.FC = () => {
                             type="button"
                             title={contact.status === 'Ativo' ? 'Desativar Contato' : 'Ativar Contato'}
                             onClick={() => handleToggleStatusOne(contact.id)}
-                            style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: contact.status === 'Ativo' ? 'var(--success)' : '#eab308', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', color: contact.status === 'Ativo' ? 'var(--success)' : 'var(--warning)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                           >
                             {contact.status === 'Ativo' ? <Check size={16} /> : <X size={16} />}
                           </button>
@@ -1105,7 +1096,7 @@ export const Contacts: React.FC = () => {
                             type="button"
                             title="Editar Contato"
                             onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
-                            style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: '#3b82f6', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                           >
                             <Edit size={16} />
                           </button>
@@ -1113,7 +1104,7 @@ export const Contacts: React.FC = () => {
                             type="button"
                             title="Excluir Contato"
                             onClick={() => handleDeleteOne(contact.id, contact.name)}
-                            style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: 'var(--error)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid var(--border)', color: 'var(--error)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -1127,22 +1118,71 @@ export const Contacts: React.FC = () => {
           </table>
         </div>
 
+        <div className="contact-mobile-list" style={{ padding: 12 }}>
+          {paginatedContacts.length === 0 ? (
+            <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>
+              Nenhum contato encontrado.
+            </div>
+          ) : (
+            paginatedContacts.map((contact) => {
+              const isSelected = selectedIds.includes(contact.id);
+              return (
+                <div key={`m-${contact.id}`} className="glass-panel contact-mobile-card">
+                  <div className="contact-mobile-card__row">
+                    <button type="button" onClick={() => handleSelectOne(contact.id)} aria-label={`Selecionar ${contact.name}`} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      {isSelected ? <CheckSquare size={18} style={{ color: 'var(--primary)' }} /> : <Square size={18} style={{ color: 'var(--text-muted)' }} />}
+                    </button>
+                    <strong className="truncate" style={{ flex: 1 }} title={contact.name}>{contact.name}</strong>
+                    <Badge variant={contact.status === 'Ativo' ? 'success' : 'warning'}>{contact.status}</Badge>
+                  </div>
+                  <div className="contact-mobile-card__phone">{contact.phone}</div>
+                  <div className="contact-mobile-card__row">
+                    <Badge variant={getCategoryBadgeVariant(contact.category)}>{contact.category}</Badge>
+                    <div className="stack-actions">
+                      <button
+                        type="button"
+                        aria-label={`Editar ${contact.name}`}
+                        onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
+                        className="btn btn-ghost"
+                        style={{ minHeight: 36, padding: '6px 10px' }}
+                      >
+                        <Edit size={16} aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Excluir ${contact.name}`}
+                        onClick={() => handleDeleteOne(contact.id, contact.name)}
+                        className="btn btn-ghost"
+                        style={{ minHeight: 36, padding: '6px 10px', color: 'var(--error)' }}
+                      >
+                        <Trash2 size={16} aria-hidden />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         {/* Footer Classic Pagination Controls */}
-        <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderTop: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Exibindo por página:</span>
+        <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Por página:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              style={{ height: '32px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '6px', padding: '0 10px', color: 'white', fontSize: '0.85rem' }}
+              className="form-input"
+              style={{ width: 'auto', height: 36, padding: '0 10px' }}
+              aria-label="Itens por página"
             >
-              <option value={5} style={{ background: '#0f172a' }}>5</option>
-              <option value={10} style={{ background: '#0f172a' }}>10</option>
-              <option value={25} style={{ background: '#0f172a' }}>25</option>
-              <option value={50} style={{ background: '#0f172a' }}>50</option>
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
             </select>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Total de {filteredAndSortedContacts.length} registro(s)
+              {filteredAndSortedContacts.length} registro(s)
             </span>
           </div>
 
@@ -1151,38 +1191,46 @@ export const Contacts: React.FC = () => {
               type="button"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === 1 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              aria-label="Primeira página"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronsLeft size={16} />
+              <ChevronsLeft size={16} aria-hidden />
             </button>
             <button
               type="button"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === 1 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              aria-label="Página anterior"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={16} aria-hidden />
             </button>
 
-            <span style={{ fontSize: '0.85rem', color: 'white', padding: '0 8px', fontWeight: 600 }}>
-              Página {currentPage} de {Math.max(1, totalPages)}
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', padding: '0 8px', fontWeight: 600 }}>
+              {currentPage}/{Math.max(1, totalPages)}
             </span>
 
             <button
               type="button"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer' }}
+              aria-label="Próxima página"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={16} aria-hidden />
             </button>
             <button
               type="button"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages || totalPages === 0}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer' }}
+              aria-label="Última página"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronsRight size={16} />
+              <ChevronsRight size={16} aria-hidden />
             </button>
           </div>
         </div>

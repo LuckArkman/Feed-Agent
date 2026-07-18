@@ -1,119 +1,161 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Link } from 'lucide-react';
-import { Button } from '@/components/Button';
+import { Link } from 'react-router-dom';
+import { Phone, Users, FileUp, FileText, Send, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/Badge';
+import { Button } from '@/components/Button';
 import { Alert } from '@/components/Alert';
+import { StatePanel } from '@/components/StatePanel';
+import { PageHeader } from '@/components/PageHeader';
+import apiClient from '@/services/apiClient';
+import { BRAND, NAV_LABELS } from '@/config/brand';
 
 export const Dashboard: React.FC = () => {
   const [alertOpen, setAlertOpen] = useState(true);
-  const [loadingDemo, setLoadingDemo] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [metrics, setMetrics] = useState({
     totalLeads: 0,
     disparosConcluidos: 0,
     successRate: '0%',
     minutasGeradas: 0,
-    queueTime: '0.0s'
   });
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const kpiRes = await apiClient.get('/analytics/kpi');
+      const kpiData = kpiRes.data?.data || { totalReachedToday: 0, successRateToday: 0 };
+
+      const contactsRes = await apiClient.get('/contacts?page=1&limit=1');
+      const totalLeads = contactsRes.data?.data?.total || 0;
+
+      let totalDrafts = 0;
       try {
-        const { apiClient } = await import('@/services/apiClient');
-        
-        // Fetch KPIs
-        const kpiRes = await apiClient.get('/analytics/kpi');
-        const kpiData = kpiRes.data?.data || { totalReachedToday: 0, successRateToday: 0 };
-        
-        // Fetch Contacts total
-        const contactsRes = await apiClient.get('/contacts?page=1&limit=1');
-        const totalLeads = contactsRes.data?.data?.total || 0;
-
-        // Fetch Drafts total
-        let totalDrafts = 0;
-        try {
-          const draftsRes = await apiClient.get('/drafts');
-          totalDrafts = draftsRes.data?.data?.length || 0;
-        } catch (err) {
-          console.warn('Could not fetch drafts count', err);
-        }
-        
-        setMetrics({
-          totalLeads,
-          disparosConcluidos: kpiData.totalReachedToday,
-          successRate: `${kpiData.successRateToday}%`,
-          minutasGeradas: totalDrafts,
-          queueTime: '0.0s'
-        });
-      } catch (error) {
-        console.error('Failed to load dashboard metrics:', error);
+        const draftsRes = await apiClient.get('/drafts');
+        totalDrafts = draftsRes.data?.data?.length || 0;
+      } catch {
+        /* optional */
       }
-    };
-    
-    fetchDashboardData();
-  }, []);
 
-  const triggerLoading = () => {
-    setLoadingDemo(true);
-    setTimeout(() => setLoadingDemo(false), 2000);
+      setMetrics({
+        totalLeads,
+        disparosConcluidos: kpiData.totalReachedToday,
+        successRate: `${kpiData.successRateToday}%`,
+        minutasGeradas: totalDrafts,
+      });
+    } catch {
+      setError('Não foi possível carregar as métricas. Verifique a conexão com a API.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    // Fetch inicial + polling — atualização assíncrona de estado remoto
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial da API
+    void fetchDashboardData();
+  }, []);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="page-stack">
       {alertOpen && (
-        <Alert variant="success" onClose={() => setAlertOpen(false)}>
-          <strong>Conexão Estabelecida:</strong> O back-end e o WhatsApp Service estão prontos para receber requisições de disparos!
+        <Alert variant="info" onClose={() => setAlertOpen(false)}>
+          Organize sua operação: conecte o canal, importe contatos, prepare o conteúdo e inicie uma campanha.
         </Alert>
       )}
 
-      {/* Quick Metrics Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-        <div className="glass-panel" style={{ padding: '24px' }}>
-          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Total de Leads</h4>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.totalLeads}</span>
-            <Badge variant="success">Base Real</Badge>
-          </div>
-        </div>
-        <div className="glass-panel" style={{ padding: '24px' }}>
-          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Minutas Geradas</h4>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.minutasGeradas}</span>
-            <Badge variant="primary">Ativas</Badge>
-          </div>
-        </div>
-        <div className="glass-panel" style={{ padding: '24px' }}>
-          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Disparos Concluídos (Hoje)</h4>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.disparosConcluidos}</span>
-            <Badge variant="success">{metrics.successRate} OK</Badge>
-          </div>
-        </div>
-        <div className="glass-panel" style={{ padding: '24px' }}>
-          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Tempo de Fila</h4>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.queueTime}</span>
-            <Badge variant="neutral">Baixo</Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Welcome */}
-      <section className="glass-panel" style={{ padding: '40px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '10px', right: '15px', opacity: 0.1 }}>
-          <Sparkles size={120} />
-        </div>
-        <h1 style={{ marginBottom: '16px', fontSize: '2.5rem', letterSpacing: '-0.03em' }}>Bem-vindo ao Feed-Agent</h1>
-        <p style={{ maxWidth: '640px', margin: '0 auto 24px auto', fontSize: '1.1rem' }}>
-          A inteligência artificial que converte imagens de contatos físicos, minutas e planilhas em filas de disparos de WhatsApp automatizados com OCR inteligente.
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-          <Button variant="primary" icon={Sparkles} onClick={triggerLoading} isLoading={loadingDemo}>
-            Verificar Diagnóstico
+      <PageHeader
+        title="Visão geral"
+        description={`Acompanhe contatos, campanhas e atividades recentes do ${BRAND.productName}.`}
+        actions={
+          <Button variant="secondary" icon={RefreshCw} onClick={fetchDashboardData} isLoading={loading}>
+            Atualizar
           </Button>
-          <Button variant="secondary" icon={Link}>Configurar Webhook</Button>
+        }
+      />
+
+      {error && (
+        <StatePanel
+          variant="error"
+          title="Falha ao carregar"
+          description={error}
+          actionLabel="Tentar novamente"
+          onAction={fetchDashboardData}
+        />
+      )}
+
+      {!error && (
+        <div className="stat-grid" aria-busy={loading}>
+          <div className="glass-panel stat-card">
+            <span className="stat-card-label">Contatos</span>
+            <div className="stat-card-row">
+              <span className="stat-card-value">{loading ? '—' : metrics.totalLeads}</span>
+              <Badge variant="neutral">Base</Badge>
+            </div>
+          </div>
+          <div className="glass-panel stat-card">
+            <span className="stat-card-label">Conteúdos</span>
+            <div className="stat-card-row">
+              <span className="stat-card-value">{loading ? '—' : metrics.minutasGeradas}</span>
+              <Badge variant="primary">Studio</Badge>
+            </div>
+          </div>
+          <div className="glass-panel stat-card">
+            <span className="stat-card-label">Campanhas hoje</span>
+            <div className="stat-card-row">
+              <span className="stat-card-value">{loading ? '—' : metrics.disparosConcluidos}</span>
+              <Badge variant="success">{metrics.successRate} entrega</Badge>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <section className="glass-panel" style={{ padding: 'var(--card-pad)' }}>
+        <h2 style={{ marginBottom: 8, fontSize: 'var(--type-h2)' }}>Primeiros passos</h2>
+        <p style={{ marginBottom: 20, color: 'var(--text-muted)' }}>
+          Conecte seu canal, importe contatos, prepare o conteúdo e inicie uma campanha.
+        </p>
+        <div className="quick-actions">
+          <Link to="/whatsapp" className="quick-action">
+            <span className="quick-action-icon" aria-hidden>
+              <Phone size={18} />
+            </span>
+            <strong>1. {NAV_LABELS.whatsapp}</strong>
+            <span>Conectar canal e ler o QR</span>
+          </Link>
+          <Link to="/contacts" className="quick-action">
+            <span className="quick-action-icon" aria-hidden>
+              <Users size={18} />
+            </span>
+            <strong>2. {NAV_LABELS.contacts}</strong>
+            <span>Importar lista ou cadastrar destinatários</span>
+          </Link>
+          <Link to="/ocr" className="quick-action">
+            <span className="quick-action-icon" aria-hidden>
+              <FileUp size={18} />
+            </span>
+            <strong>3. {NAV_LABELS.ocr}</strong>
+            <span>Extrair texto de PDF ou imagem</span>
+          </Link>
+          <Link to="/drafts" className="quick-action">
+            <span className="quick-action-icon" aria-hidden>
+              <FileText size={18} />
+            </span>
+            <strong>4. {NAV_LABELS.drafts}</strong>
+            <span>Revisar e aprovar conteúdo</span>
+          </Link>
+          <Link to="/broadcast" className="quick-action">
+            <span className="quick-action-icon" aria-hidden>
+              <Send size={18} />
+            </span>
+            <strong>5. {NAV_LABELS.broadcast}</strong>
+            <span>Iniciar envio e acompanhar histórico</span>
+          </Link>
         </div>
       </section>
     </div>
   );
 };
+
 export default Dashboard;

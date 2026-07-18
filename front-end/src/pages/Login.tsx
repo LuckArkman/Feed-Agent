@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, LogIn, MessageSquareCode, Sparkles } from 'lucide-react';
+import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
 import { Button } from '@/components/Button';
 import { Alert } from '@/components/Alert';
+import { BrandMark } from '@/components/BrandMark';
+import { BrandCopyright } from '@/components/BrandCopyright';
 import { useAuthStore } from '@/store/authStore';
 import { showToast } from '@/utils/toastHelper';
 import apiClient from '@/services/apiClient';
+import { BRAND } from '@/config/brand';
 import '@/styles/login.css';
 
 export const Login: React.FC = () => {
@@ -13,40 +17,41 @@ export const Login: React.FC = () => {
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Real-time validations
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isPasswordValid = password.length >= 4;
+  const showDevHints = import.meta.env.DEV;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!email) {
-      const msg = 'O e-mail corporativo é obrigatório.';
+      const msg = 'O e-mail é obrigatório.';
       setError(msg);
       showToast.error(msg);
       return;
     }
 
     if (!isEmailValid) {
-      const msg = 'Por favor, insira um formato de e-mail corporativo válido.';
+      const msg = 'Informe um e-mail válido.';
       setError(msg);
       showToast.error(msg);
       return;
     }
 
     if (!password) {
-      const msg = 'A senha de acesso é obrigatória.';
+      const msg = 'A senha é obrigatória.';
       setError(msg);
       showToast.error(msg);
       return;
     }
 
     if (!isPasswordValid) {
-      const msg = 'A senha deve conter ao menos 4 caracteres.';
+      const msg = 'A senha deve ter ao menos 4 caracteres.';
       setError(msg);
       showToast.error(msg);
       return;
@@ -59,14 +64,16 @@ export const Login: React.FC = () => {
       if (res.data?.success) {
         const { token, user } = res.data.data;
         login(token, { id: String(user.id), name: user.name, email: user.email });
-        showToast.success(`Bem-vindo de volta, ${user.name}!`);
+        showToast.success(`Bem-vindo, ${user.name}!`);
         navigate('/dashboard');
       } else {
         setError(res.data?.error || 'Falha na autenticação.');
         showToast.error('Falha na autenticação.');
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'Credenciais inválidas ou erro no servidor.';
+    } catch (err: unknown) {
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data as { error?: string } | undefined)?.error || 'Credenciais inválidas ou erro no servidor.'
+        : 'Credenciais inválidas ou erro no servidor.';
       setError(errorMsg);
       showToast.error(errorMsg);
     } finally {
@@ -76,106 +83,123 @@ export const Login: React.FC = () => {
 
   return (
     <div className="login-screen-bg">
-      <div className="login-glass-card">
-        {/* Brand Banner Header */}
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            backgroundColor: 'var(--primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-glow)',
-          }}>
-            <MessageSquareCode size={30} style={{ color: 'white' }} />
+      <div className="login-screen-inner">
+        <aside className="login-brand-pane">
+          <BrandMark className="login-brand-mark" />
+          <p className="login-brand-tagline">{BRAND.tagline}</p>
+          <h1>{BRAND.institutionalLine}</h1>
+          <p>{BRAND.solutionLine}</p>
+          <ul className="login-brand-steps" aria-label="Capacidades">
+            <li>
+              <span className="step-num" aria-hidden>
+                1
+              </span>
+              Contatos e listas organizadas
+            </li>
+            <li>
+              <span className="step-num" aria-hidden>
+                2
+              </span>
+              Conteúdos revisados com controle
+            </li>
+            <li>
+              <span className="step-num" aria-hidden>
+                3
+              </span>
+              Campanhas com operação rastreável
+            </li>
+          </ul>
+          <div className="login-brand-abstract" aria-hidden>
+            <span className="abs-node" />
+            <span className="abs-line" />
+            <span className="abs-node abs-node--accent" />
+            <span className="abs-line" />
+            <span className="abs-node" />
           </div>
-          <div>
-            <h2 style={{ fontSize: '1.85rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'white' }}>
-              Portal Feed-Agent
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Insira suas credenciais corporativas salvas
-            </p>
+        </aside>
+
+        <div className="login-glass-card">
+          <div className="login-mobile-brand">
+            <BrandMark />
           </div>
-        </div>
-
-        {/* Error Feedback Display */}
-        {error && <Alert variant="error">{error}</Alert>}
-
-        {/* Interactive Floating Label Form */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          
-          {/* Email Floating Input */}
-          <div className="floating-input-group">
-            <input
-              type="email"
-              id="login-email"
-              placeholder=" "
-              className="floating-input-box"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              autoComplete="email"
-            />
-            <Mail size={18} className="floating-input-icon" />
-            <span className="floating-label-text">E-mail Corporativo</span>
-            
-            {/* Visual validity dot indicator */}
-            <span className={`validation-dot-indicator ${
-              email === '' ? 'validation-dot-empty' : (isEmailValid ? 'validation-dot-valid' : 'validation-dot-invalid')
-            }`} />
+          <div className="login-card-heading">
+            <h2>Entrar</h2>
+            <p>Acesse sua conta {BRAND.productName}.</p>
           </div>
 
-          {/* Password Floating Input */}
-          <div className="floating-input-group">
-            <input
-              type="password"
-              id="login-password"
-              placeholder=" "
-              className="floating-input-box"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              autoComplete="current-password"
-            />
-            <Lock size={18} className="floating-input-icon" />
-            <span className="floating-label-text">Senha Secreta</span>
-            
-            {/* Visual validity dot indicator */}
-            <span className={`validation-dot-indicator ${
-              password === '' ? 'validation-dot-empty' : (isPasswordValid ? 'validation-dot-valid' : 'validation-dot-invalid')
-            }`} />
-          </div>
+          {error && <Alert variant="error">{error}</Alert>}
 
-          <Button
-            type="submit"
-            variant="primary"
-            icon={LogIn}
-            isLoading={loading}
-            style={{ width: '100%', marginTop: '14px', height: '48px', fontSize: '0.95rem' }}
-          >
-            Acessar Painel Central
-          </Button>
-        </form>
+          <form onSubmit={handleLogin}>
+            <div className="floating-input-group">
+              <input
+                type="email"
+                id="login-email"
+                placeholder=" "
+                className="floating-input-box"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                autoComplete="email"
+              />
+              <Mail size={18} className="floating-input-icon" aria-hidden />
+              <span className="floating-label-text">E-mail</span>
+              <span
+                className={`validation-dot-indicator ${
+                  email === ''
+                    ? 'validation-dot-empty'
+                    : isEmailValid
+                      ? 'validation-dot-valid'
+                      : 'validation-dot-invalid'
+                }`}
+                aria-hidden
+              />
+            </div>
 
-        {/* Bottom utility footer */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', fontSize: '0.85rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', color: 'var(--text-muted)' }}>
-            <Sparkles size={14} style={{ color: 'var(--primary)' }} />
-            <span>Esqueceu sua senha?{' '}
-              <Link to="/forgot-password" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
-                Recuperar Acesso
-              </Link>
+            <div className="floating-input-group">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="login-password"
+                placeholder=" "
+                className="floating-input-box"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                autoComplete="current-password"
+              />
+              <Lock size={18} className="floating-input-icon" aria-hidden />
+              <span className="floating-label-text">Senha</span>
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                tabIndex={0}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+              </button>
+            </div>
+
+            <Button type="submit" variant="primary" icon={LogIn} isLoading={loading} className="login-submit-btn">
+              {BRAND.loginCta}
+            </Button>
+          </form>
+
+          <div className="login-footer-links">
+            <span>
+              Esqueceu a senha? <Link to="/forgot-password">Recuperar acesso</Link>
+            </span>
+            <span>
+              Ainda não tem conta? <Link to="/register">Criar administrador</Link>
             </span>
           </div>
-          <div style={{ color: 'var(--text-muted)' }}>
-            Novo por aqui?{' '}
-            <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
-              Criar Administrador
-            </Link>
-          </div>
+
+          {showDevHints && (
+            <p className="login-dev-hint" data-testid="login-dev-hint">
+              Ambiente de desenvolvimento — use as credenciais locais configuradas no backend.
+            </p>
+          )}
+
+          <BrandCopyright className="login-copyright" showSolutionLine />
         </div>
       </div>
     </div>

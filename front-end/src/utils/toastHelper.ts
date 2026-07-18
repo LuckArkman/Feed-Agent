@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 /**
- * Robust notification wrappers aligning with Feed-Agent's Design System
+ * Robust notification wrappers aligning with ZapBusiness Design System
  */
 export const showToast = {
   success: (message: string) => {
@@ -15,15 +15,16 @@ export const showToast = {
     });
   },
 
-  error: (error: any, fallbackMessage = 'Ocorreu um erro inesperado de rede.') => {
+  error: (error: unknown, fallbackMessage = 'Ocorreu um erro inesperado de rede.') => {
     let errorMessage = fallbackMessage;
 
     if (axios.isAxiosError(error)) {
       // Try to extract backend error messages (Prisma or Express payloads)
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+      const data = error.response?.data as { message?: string; error?: string } | undefined;
+      if (data?.message) {
+        errorMessage = data.message;
+      } else if (data?.error) {
+        errorMessage = data.error;
       } else if (error.message) {
         errorMessage = error.message;
       }

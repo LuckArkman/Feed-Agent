@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Key, KeyRound, ArrowLeft, RefreshCw, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Key, ArrowLeft, RefreshCw, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Alert } from '@/components/Alert';
 import { showToast } from '@/utils/toastHelper';
-import { getPasswordStrength } from './Register';
+import { getPasswordStrength } from '@/utils/passwordStrength';
 import '@/styles/login.css';
 
 export const ForgotPassword: React.FC = () => {
@@ -116,33 +116,17 @@ export const ForgotPassword: React.FC = () => {
 
   return (
     <div className="login-screen-bg">
-      <div className="login-glass-card" style={{ maxWidth: '480px' }}>
+      <div className="login-screen-inner" style={{ gridTemplateColumns: '1fr', placeContent: 'center', padding: 24 }}>
+      <div className="login-glass-card" style={{ maxWidth: 440, margin: '0 auto' }}>
         
         {/* Stage 1: Request Recovery */}
         {stage === 'request' && (
           <>
-            {/* Header */}
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-              <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                backgroundColor: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'var(--shadow-glow)',
-              }}>
-                <KeyRound size={30} style={{ color: 'white' }} />
-              </div>
-              <div>
-                <h2 style={{ fontSize: '1.85rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'white' }}>
-                  Recuperar Senha
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-                  Enviaremos um código de segurança de 6 dígitos
-                </p>
-              </div>
+            <div className="login-card-heading">
+              <h2>Recuperar senha</h2>
+              <p>
+                Fluxo demonstrativo no frontend — o backend ainda não expõe endpoint de reset.
+              </p>
             </div>
 
             {error && <Alert variant="error">{error}</Alert>}
@@ -181,28 +165,9 @@ export const ForgotPassword: React.FC = () => {
         {/* Stage 2: Verification and Reset */}
         {stage === 'reset' && (
           <>
-            {/* Header */}
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-              <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                backgroundColor: 'var(--success)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
-              }}>
-                <ShieldCheck size={30} style={{ color: 'white' }} />
-              </div>
-              <div>
-                <h2 style={{ fontSize: '1.85rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'white' }}>
-                  Redefinir Senha
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-                  Digite o código recebido no e-mail corporativo
-                </p>
-              </div>
+            <div className="login-card-heading">
+              <h2>Redefinir senha</h2>
+              <p>Demonstração de UI — sem endpoint de reset no backend.</p>
             </div>
 
             {error && <Alert variant="error">{error}</Alert>}
@@ -348,24 +313,13 @@ export const ForgotPassword: React.FC = () => {
           </>
         )}
 
-        {/* Back navigation footer */}
-        <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
-          <Link to="/login" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: 'var(--text-muted)',
-            textDecoration: 'none',
-            fontSize: '0.85rem',
-            transition: 'color 0.2s',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-          >
+        <div className="login-footer-links" style={{ borderTop: '1px solid var(--border)', paddingTop: 16, width: '100%' }}>
+          <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} />
-            <span>Voltar ao login</span>
+            Voltar ao login
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );
