@@ -992,14 +992,14 @@ export const Contacts: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Datatable */}
+      {/* Main Datatable + mobile cards */}
       <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <div className="table-scroll contacts-desktop-table">
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 720 }}>
             <thead>
-              <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '16px', width: '48px', textAlign: 'center' }}>
-                  <button type="button" onClick={handleSelectAll} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <tr style={{ backgroundColor: 'color-mix(in srgb, var(--border) 35%, transparent)', borderBottom: '1px solid var(--border)' }}>
+                <th style={{ padding: '14px', width: '48px', textAlign: 'center' }}>
+                  <button type="button" onClick={handleSelectAll} aria-label="Selecionar todos" style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
                     {selectedIds.length === paginatedContacts.length && paginatedContacts.length > 0 ? (
                       <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
                     ) : (
@@ -1007,34 +1007,23 @@ export const Contacts: React.FC = () => {
                     )}
                   </button>
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('name')}>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('name')}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Nome do Destinatário</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'name' ? 'var(--primary)' : 'var(--text-muted)' }} />
+                    <span>Nome</span>
+                    <ArrowUpDown size={14} aria-hidden style={{ color: sortField === 'name' ? 'var(--primary)' : 'var(--text-muted)' }} />
                   </div>
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  Número de WhatsApp
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>WhatsApp</th>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('category')}>
+                  Categoria
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('category')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Categoria</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'category' ? 'var(--primary)' : 'var(--text-muted)' }} />
-                  </div>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                  Status
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('status')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Status de Disparo</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'status' ? 'var(--primary)' : 'var(--text-muted)' }} />
-                  </div>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('dateAdded')}>
+                  Cadastro
                 </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => handleSort('dateAdded')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Data de Cadastro</span>
-                    <ArrowUpDown size={14} style={{ color: sortField === 'dateAdded' ? 'var(--primary)' : 'var(--text-muted)' }} />
-                  </div>
-                </th>
-                <th style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>
+                <th style={{ padding: '14px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>
                   Ações
                 </th>
               </tr>
@@ -1043,7 +1032,7 @@ export const Contacts: React.FC = () => {
               {paginatedContacts.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    Nenhum contato encontrado com os filtros e termos de busca especificados.
+                    Nenhum contato encontrado com os filtros atuais.
                   </td>
                 </tr>
               ) : (
@@ -1054,39 +1043,30 @@ export const Contacts: React.FC = () => {
                       key={contact.id}
                       style={{
                         borderBottom: '1px solid var(--border)',
-                        backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.05)' : 'transparent',
-                        transition: 'background-color 0.2s',
+                        backgroundColor: isSelected ? 'var(--primary-alpha)' : 'transparent',
                       }}
                     >
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <button type="button" onClick={() => handleSelectOne(contact.id)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
-                          {isSelected ? (
-                            <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
-                          ) : (
-                            <Square size={18} style={{ color: 'var(--text-muted)' }} />
-                          )}
+                      <td style={{ padding: '14px', textAlign: 'center' }}>
+                        <button type="button" onClick={() => handleSelectOne(contact.id)} aria-label={`Selecionar ${contact.name}`} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                          {isSelected ? <CheckSquare size={18} style={{ color: 'var(--primary)' }} /> : <Square size={18} style={{ color: 'var(--text-muted)' }} />}
                         </button>
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 600, color: 'white', fontSize: '0.95rem' }}>{contact.name}</span>
+                      <td style={{ padding: '14px', minWidth: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                          <span className="truncate" style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }} title={contact.name}>{contact.name}</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {contact.id}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', fontFamily: 'monospace', fontSize: '0.95rem', color: '#cbd5e1' }}>
+                      <td className="text-break" style={{ padding: '14px', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--text-main)' }}>
                         {contact.phone}
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <Badge variant={getCategoryBadgeVariant(contact.category)}>
-                          {contact.category}
-                        </Badge>
+                      <td style={{ padding: '14px' }}>
+                        <Badge variant={getCategoryBadgeVariant(contact.category)}>{contact.category}</Badge>
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <Badge variant={contact.status === 'Ativo' ? 'success' : 'warning'}>
-                          {contact.status}
-                        </Badge>
+                      <td style={{ padding: '14px' }}>
+                        <Badge variant={contact.status === 'Ativo' ? 'success' : 'warning'}>{contact.status}</Badge>
                       </td>
-                      <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                      <td style={{ padding: '14px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                         {contact.dateAdded}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }}>
@@ -1125,22 +1105,71 @@ export const Contacts: React.FC = () => {
           </table>
         </div>
 
+        <div className="contact-mobile-list" style={{ padding: 12 }}>
+          {paginatedContacts.length === 0 ? (
+            <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>
+              Nenhum contato encontrado.
+            </div>
+          ) : (
+            paginatedContacts.map((contact) => {
+              const isSelected = selectedIds.includes(contact.id);
+              return (
+                <div key={`m-${contact.id}`} className="glass-panel contact-mobile-card">
+                  <div className="contact-mobile-card__row">
+                    <button type="button" onClick={() => handleSelectOne(contact.id)} aria-label={`Selecionar ${contact.name}`} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      {isSelected ? <CheckSquare size={18} style={{ color: 'var(--primary)' }} /> : <Square size={18} style={{ color: 'var(--text-muted)' }} />}
+                    </button>
+                    <strong className="truncate" style={{ flex: 1 }} title={contact.name}>{contact.name}</strong>
+                    <Badge variant={contact.status === 'Ativo' ? 'success' : 'warning'}>{contact.status}</Badge>
+                  </div>
+                  <div className="contact-mobile-card__phone">{contact.phone}</div>
+                  <div className="contact-mobile-card__row">
+                    <Badge variant={getCategoryBadgeVariant(contact.category)}>{contact.category}</Badge>
+                    <div className="stack-actions">
+                      <button
+                        type="button"
+                        aria-label={`Editar ${contact.name}`}
+                        onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
+                        className="btn btn-ghost"
+                        style={{ minHeight: 36, padding: '6px 10px' }}
+                      >
+                        <Edit size={16} aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Excluir ${contact.name}`}
+                        onClick={() => handleDeleteOne(contact.id, contact.name)}
+                        className="btn btn-ghost"
+                        style={{ minHeight: 36, padding: '6px 10px', color: 'var(--error)' }}
+                      >
+                        <Trash2 size={16} aria-hidden />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         {/* Footer Classic Pagination Controls */}
-        <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderTop: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Exibindo por página:</span>
+        <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Por página:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              style={{ height: '32px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '6px', padding: '0 10px', color: 'white', fontSize: '0.85rem' }}
+              className="form-input"
+              style={{ width: 'auto', height: 36, padding: '0 10px' }}
+              aria-label="Itens por página"
             >
-              <option value={5} style={{ background: '#0f172a' }}>5</option>
-              <option value={10} style={{ background: '#0f172a' }}>10</option>
-              <option value={25} style={{ background: '#0f172a' }}>25</option>
-              <option value={50} style={{ background: '#0f172a' }}>50</option>
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
             </select>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Total de {filteredAndSortedContacts.length} registro(s)
+              {filteredAndSortedContacts.length} registro(s)
             </span>
           </div>
 
@@ -1149,38 +1178,46 @@ export const Contacts: React.FC = () => {
               type="button"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === 1 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              aria-label="Primeira página"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronsLeft size={16} />
+              <ChevronsLeft size={16} aria-hidden />
             </button>
             <button
               type="button"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === 1 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              aria-label="Página anterior"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={16} aria-hidden />
             </button>
 
-            <span style={{ fontSize: '0.85rem', color: 'white', padding: '0 8px', fontWeight: 600 }}>
-              Página {currentPage} de {Math.max(1, totalPages)}
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', padding: '0 8px', fontWeight: 600 }}>
+              {currentPage}/{Math.max(1, totalPages)}
             </span>
 
             <button
               type="button"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer' }}
+              aria-label="Próxima página"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={16} aria-hidden />
             </button>
             <button
               type="button"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages || totalPages === 0}
-              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-muted)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer' }}
+              aria-label="Última página"
+              className="btn btn-ghost"
+              style={{ width: 36, height: 36, padding: 0 }}
             >
-              <ChevronsRight size={16} />
+              <ChevronsRight size={16} aria-hidden />
             </button>
           </div>
         </div>

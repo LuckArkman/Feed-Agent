@@ -367,7 +367,7 @@ export const BroadcastQueue: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', marginTop: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <CheckCircle size={20} style={{ color: 'var(--success)' }} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -426,7 +426,7 @@ export const BroadcastQueue: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '10px', backgroundColor: '#090d16', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: '10px', backgroundColor: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
           {contacts.length === 0 ? (
             <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', gridColumn: '1 / -1' }}>Nenhum contato encontrado ou carregando...</div>
           ) : (
@@ -452,7 +452,7 @@ export const BroadcastQueue: React.FC = () => {
       </div>
 
       {/* Grid Layout: Launch Configuration Hub */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '24px' }}>
+      <div className="responsive-grid">
         
         {/* Left Card: Delay Slider */}
         <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '24px', borderColor: 'var(--primary)', position: 'relative', overflow: 'hidden' }}>
@@ -887,7 +887,7 @@ export const BroadcastQueue: React.FC = () => {
               <History size={24} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'white' }}>Histórico de Lotes Transmitidos Passados</h3>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)' }}>Histórico de lotes</h3>
               <span style={{ fontSize: '0.85rem', color: '#d8b4fe' }}>Auditoria de entregas, volumes disparados e relatórios CSV consolidados</span>
             </div>
           </div>
@@ -895,8 +895,8 @@ export const BroadcastQueue: React.FC = () => {
           <Badge variant="primary">Mês Atual: Maio/2026</Badge>
         </div>
 
-        <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: '#090d16' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+        <div className="table-scroll" style={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', minWidth: 640 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(255,255,255,0.03)', color: '#94a3b8' }}>
                 <th style={{ padding: '16px 24px', fontWeight: 600 }}>Data de Envio</th>

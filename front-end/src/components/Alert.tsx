@@ -30,8 +30,8 @@ export const Alert: React.FC<AlertProps> = ({
         <div className="alert-message">{children}</div>
       </div>
       {onClose && (
-        <button type="button" className="alert-close-btn" onClick={onClose} aria-label="Close alert">
-          <X size={16} />
+        <button type="button" className="alert-close-btn" onClick={onClose} aria-label="Fechar alerta">
+          <X size={16} aria-hidden />
         </button>
       )}
     </div>

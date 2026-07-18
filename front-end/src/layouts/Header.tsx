@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon, Wifi, Menu, ChevronDown, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -26,32 +26,50 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
   const navigate = useNavigate();
   const location = useLocation();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-
   const [connectedCount, setConnectedCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
-
     const fetchStatus = () => {
       apiClient
         .get('/whatsapp/instances')
         .then((res) => {
           if (res.data?.success) {
             const instances = res.data.data;
-            const openCount = instances.filter((inst: { liveStatus?: { state?: string } }) => inst.liveStatus?.state === 'OPEN').length;
+            const openCount = instances.filter(
+              (inst: { liveStatus?: { state?: string } }) => inst.liveStatus?.state === 'OPEN',
+            ).length;
             setConnectedCount(openCount);
           }
         })
         .catch(() => {});
     };
-
     fetchStatus();
     const interval = setInterval(fetchStatus, 15000);
     return () => clearInterval(interval);
   }, [user]);
+
+  useEffect(() => {
+    if (!profileDropdownOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setProfileDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [profileDropdownOpen]);
 
   const handleLogout = () => {
     logout();
@@ -60,23 +78,29 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
 
   const getInitials = (name?: string) => {
     if (!name) return 'US';
-    const parts = name.trim().split(' ');
+    const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
+  const statusLabel = connectedCount > 0 ? `${connectedCount} conectado(s)` : 'Sem WhatsApp';
+
   return (
     <header className="app-header">
       <div className="header-left">
-        <button type="button" className="mobile-menu-btn" onClick={onMenuClick} aria-label="Abrir menu">
-          <Menu size={20} />
+        <button type="button" className="mobile-menu-btn" onClick={onMenuClick} aria-label="Abrir menu de navegação">
+          <Menu size={20} aria-hidden />
         </button>
-        <h2 className="header-page-title">{titles[location.pathname] || 'Feed-Agent'}</h2>
+        <p className="header-page-title" title={titles[location.pathname] || 'Feed-Agent'}>
+          {titles[location.pathname] || 'Feed-Agent'}
+        </p>
       </div>
 
       <div className="header-right">
         <div
           className="header-status-badge"
+          title={statusLabel}
+          aria-label={statusLabel}
           style={{
             backgroundColor:
               connectedCount > 0
@@ -89,56 +113,63 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
             color: connectedCount > 0 ? 'var(--success)' : 'var(--warning)',
           }}
         >
-          <Wifi size={14} className="status-icon-glow" />
-          <span className="status-text">
-            {connectedCount > 0 ? `${connectedCount} conectado(s)` : 'Sem WhatsApp'}
-          </span>
+          <Wifi size={14} className="status-icon-glow" aria-hidden />
+          <span className="status-text">{statusLabel}</span>
         </div>
 
         <button
           type="button"
           onClick={onThemeToggle}
           className="theme-switcher-btn"
+          aria-label={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
           title={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
         >
           {theme === 'light' ? (
-            <Moon size={18} className="theme-icon theme-icon-rotate" />
+            <Moon size={18} className="theme-icon theme-icon-rotate" aria-hidden />
           ) : (
-            <Sun size={18} className="theme-icon theme-icon-rotate" />
+            <Sun size={18} className="theme-icon theme-icon-rotate" aria-hidden />
           )}
         </button>
 
-        <div className="profile-dropdown-container">
+        <div className="profile-dropdown-container" ref={dropdownRef}>
           <button
             type="button"
             className="profile-trigger-btn"
-            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+            aria-expanded={profileDropdownOpen}
+            aria-haspopup="menu"
+            aria-label={`Menu da conta de ${user?.name || 'usuário'}`}
+            onClick={() => setProfileDropdownOpen((o) => !o)}
           >
-            <div className="profile-avatar">{getInitials(user?.name)}</div>
-            <span className="profile-name">{user?.name || 'Visitante'}</span>
-            <ChevronDown size={14} className={`dropdown-arrow ${profileDropdownOpen ? 'arrow-rotated' : ''}`} />
+            <div className="profile-avatar" aria-hidden>
+              {getInitials(user?.name)}
+            </div>
+            <span className="profile-name truncate" title={user?.name || 'Visitante'}>
+              {user?.name || 'Visitante'}
+            </span>
+            <ChevronDown size={14} className={`dropdown-arrow ${profileDropdownOpen ? 'arrow-rotated' : ''}`} aria-hidden />
           </button>
 
           {profileDropdownOpen && (
-            <div className="profile-dropdown-menu glass-panel">
+            <div className="profile-dropdown-menu glass-panel" role="menu">
               <div className="dropdown-user-header">
-                <span className="user-header-name">{user?.name || 'Usuário'}</span>
+                <span className="user-header-name truncate">{user?.name || 'Usuário'}</span>
                 <span className="user-header-email">{user?.email || ''}</span>
               </div>
               <hr className="dropdown-divider" />
               <button
                 type="button"
                 className="dropdown-item"
+                role="menuitem"
                 onClick={() => {
                   setProfileDropdownOpen(false);
                   navigate('/profile');
                 }}
               >
-                <User size={16} />
+                <User size={16} aria-hidden />
                 <span>Meu perfil</span>
               </button>
-              <button type="button" className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
-                <LogOut size={16} />
+              <button type="button" className="dropdown-item dropdown-item-danger" role="menuitem" onClick={handleLogout}>
+                <LogOut size={16} aria-hidden />
                 <span>Sair</span>
               </button>
             </div>

@@ -53,9 +53,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, onItemCli
   const location = useLocation();
 
   return (
-    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`} aria-label="Navegação principal">
       <div className="sidebar-brand">
-        <div className="brand-logo">
+        <div className="brand-logo" aria-hidden>
           <MessageSquareCode size={22} className="brand-icon" />
         </div>
         {!collapsed && <span className="brand-title">Feed-Agent</span>}
@@ -64,8 +64,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, onItemCli
       <nav className="sidebar-nav">
         {sections.map((section) => (
           <div key={section.label}>
-            <div className="nav-section-label">{section.label}</div>
-            <ul className="nav-list">
+            <div className="nav-section-label" id={`nav-${section.label}`}>
+              {section.label}
+            </div>
+            <ul className="nav-list" aria-labelledby={`nav-${section.label}`}>
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -76,10 +78,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, onItemCli
                       onClick={onItemClick}
                       className={`nav-link ${isActive ? 'nav-link-active' : ''}`}
                       title={collapsed ? item.name : undefined}
+                      aria-current={isActive ? 'page' : undefined}
                     >
-                      <Icon size={20} className="nav-icon" />
+                      <Icon size={20} className="nav-icon" aria-hidden />
                       {!collapsed && <span className="nav-text">{item.name}</span>}
-                      {isActive && !collapsed && <span className="active-dot" />}
+                      {isActive && !collapsed && <span className="active-dot" aria-hidden />}
                     </Link>
                   </li>
                 );
@@ -90,8 +93,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, onItemCli
       </nav>
 
       <div className="sidebar-footer">
-        <button type="button" className="sidebar-collapse-btn" onClick={onToggle}>
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        <button
+          type="button"
+          className="sidebar-collapse-btn"
+          onClick={onToggle}
+          aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? <ChevronRight size={18} aria-hidden /> : <ChevronLeft size={18} aria-hidden />}
           {!collapsed && <span>Recolher</span>}
         </button>
       </div>

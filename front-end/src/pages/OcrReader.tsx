@@ -514,7 +514,7 @@ A minuta foi salva automaticamente e está aguardando aprovação no quadro Kanb
           animation: 'fade-in 0.2s ease-out',
         }}>
           <div className="glass-panel" style={{
-            maxWidth: '1400px', width: '100%', maxHeight: '92vh', display: 'flex', flexDirection: 'column',
+            maxWidth: 'min(96vw, 1100px)', width: '100%', maxHeight: '92vh', display: 'flex', flexDirection: 'column',
             overflow: 'hidden', boxShadow: '0 30px 90px rgba(0, 0, 0, 0.9)', border: '1px solid var(--primary)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(15, 23, 42, 0.8)' }}>
@@ -546,7 +546,7 @@ A minuta foi salva automaticamente e está aguardando aprovação no quadro Kanb
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', flex: 1, overflow: 'hidden' }}>
+            <div className="split-pane" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
               <div style={{ backgroundColor: '#05070f', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>

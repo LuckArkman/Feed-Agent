@@ -613,7 +613,7 @@ export const DraftsStudio: React.FC = () => {
           animation: 'fade-in 0.2s ease-out',
         }}>
           <div className="glass-panel" style={{
-            maxWidth: '1250px', width: '100%', maxHeight: '92vh', display: 'flex', flexDirection: 'column',
+            maxWidth: 'min(96vw, 960px)', width: '100%', maxHeight: '92vh', display: 'flex', flexDirection: 'column',
             overflow: 'hidden', boxShadow: '0 30px 100px rgba(0, 0, 0, 0.95)', border: '1px solid var(--primary)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(15, 23, 42, 0.9)' }}>
@@ -750,7 +750,7 @@ export const DraftsStudio: React.FC = () => {
           animation: 'fade-in 0.2s ease-out',
         }}>
           <div className="glass-panel" style={{
-            maxWidth: '1350px', width: '100%', maxHeight: '92vh', display: 'flex', flexDirection: 'column',
+            maxWidth: 'min(96vw, 1100px)', width: '100%', maxHeight: '92vh', display: 'flex', flexDirection: 'column',
             overflow: 'hidden', boxShadow: '0 30px 100px rgba(0, 0, 0, 0.95)', border: '1px solid #3b82f6',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(15, 23, 42, 0.9)' }}>
@@ -867,7 +867,7 @@ export const DraftsStudio: React.FC = () => {
           animation: 'fade-in 0.2s ease-out',
         }}>
           <div className="glass-panel" style={{
-            maxWidth: '1450px', width: '100%', maxHeight: '94vh', display: 'flex', flexDirection: 'column',
+            maxWidth: 'min(96vw, 1100px)', width: '100%', maxHeight: '94vh', display: 'flex', flexDirection: 'column',
             overflow: 'hidden', boxShadow: '0 30px 90px rgba(0, 0, 0, 0.9)', border: '1px solid var(--primary)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(15, 23, 42, 0.8)' }}>
@@ -893,7 +893,7 @@ export const DraftsStudio: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', flex: 1, overflow: 'hidden' }}>
+            <div className="split-pane" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
               
               {/* Left Column: Form Controls */}
               <form onSubmit={handleSaveDraft} style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: '#090d16', overflowY: 'auto', borderRight: '1px solid var(--border)' }}>
@@ -1224,7 +1224,7 @@ export const DraftsStudio: React.FC = () => {
       </div>
 
       {/* Kanban Board Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'flex-start' }}>
+      <div className="responsive-grid" style={{ alignItems: 'flex-start' }}>
         
         {/* Column 1: PENDING */}
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', borderColor: 'rgba(99, 102, 241, 0.4)' }}>

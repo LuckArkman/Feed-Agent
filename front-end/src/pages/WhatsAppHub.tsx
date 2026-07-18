@@ -40,9 +40,11 @@ export const WhatsAppHub: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchInstances();
-    // Poll every 10 seconds to keep live states updated on the grid
-    const interval = setInterval(fetchInstances, 10000);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial + polling da API
+    void fetchInstances();
+    const interval = setInterval(() => {
+      void fetchInstances();
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -55,20 +57,20 @@ export const WhatsAppHub: React.FC = () => {
       await apiClient.post('/whatsapp/instances', { name: `Dispositivo ${instances.length + 1}` });
       showToast.success('Nova instância criada com sucesso!');
       await fetchInstances();
-    } catch (err) {
+    } catch {
       showToast.error('Erro ao criar instância.');
     }
   };
 
   const handleDeleteInstance = async (id: number) => {
     if (!window.confirm('Tem certeza que deseja deletar esta instância? Todas as conexões serão perdidas.')) return;
-    
+
     try {
       await apiClient.delete(`/whatsapp/instances/${id}`);
       showToast.success('Instância deletada.');
       setSelectedInstance(null);
       await fetchInstances();
-    } catch (err) {
+    } catch {
       showToast.error('Erro ao deletar instância.');
     }
   };
