@@ -6,7 +6,7 @@ export const BRAND = {
   productName: 'ZapBusiness',
   companyName: 'LCM Enterprise Ltda.',
   companyShort: 'LCM',
-  /** Assinatura institucional (copyright / metadados). */
+  /** Assinatura institucional (uso pontual; logo principal não inclui “by LCM”). */
   signature: 'ZapBusiness by LCM',
   tagline: 'Automação inteligente para comunicação empresarial',
   description:

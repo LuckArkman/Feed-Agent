@@ -8,16 +8,16 @@ interface BrandMarkProps {
   /** Quando definido, a marca navega para a rota. */
   to?: string;
   className?: string;
-  /** Exibe subtítulo “by LCM” sob o wordmark (sidebar/login). */
-  showByline?: boolean;
 }
 
-/** Marca provisória ZapBusiness — símbolo + wordmark (+ by LCM). */
+/**
+ * Marca ZapBusiness conforme guia visual:
+ * símbolo Z + wordmark (Zap / Business). Sem “by LCM” no logo.
+ */
 export const BrandMark: React.FC<BrandMarkProps> = ({
   compact = false,
   to,
   className = '',
-  showByline = true,
 }) => {
   const content = (
     <>
@@ -28,25 +28,23 @@ export const BrandMark: React.FC<BrandMarkProps> = ({
             <span className="brand-mark__zap">Zap</span>
             <span className="brand-mark__business">Business</span>
           </span>
-          {showByline && <span className="brand-mark__by">by {BRAND.companyShort}</span>}
         </span>
       )}
     </>
   );
 
-  const label = showByline ? BRAND.signature : BRAND.productName;
   const classes = `brand-mark ${compact ? 'brand-mark--compact' : ''} ${className}`.trim();
 
   if (to) {
     return (
-      <Link to={to} className={classes} title={label} aria-label={label}>
+      <Link to={to} className={classes} title={BRAND.productName} aria-label={BRAND.productName}>
         {content}
       </Link>
     );
   }
 
   return (
-    <div className={classes} title={label} aria-label={label}>
+    <div className={classes} title={BRAND.productName} aria-label={BRAND.productName}>
       {content}
     </div>
   );

@@ -48,7 +48,7 @@ const FAQ_DATA: FaqItem[] = [
   },
 ];
 
-const QUICK_GUIDE = `# ${BRAND.signature} — guia rápido
+const QUICK_GUIDE = `# ${BRAND.productName} — guia rápido
 
 ## Fluxo
 1. Conectar canal (QR)

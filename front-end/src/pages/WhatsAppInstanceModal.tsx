@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, RefreshCw, CheckCircle2, Clock, LogOut, Send, X, Lock } from 'lucide-react';
+import { AlertTriangle, RefreshCw, CheckCircle2, Clock, LogOut, Send, Lock } from 'lucide-react';
 import { Button } from '@/components/Button';
+import { ResponsiveModal } from '@/components/ResponsiveModal';
 import { useSseGateway } from '@/hooks/useSseGateway';
 import type { SseEvent } from '@/hooks/useSseGateway';
 import { showToast } from '@/utils/toastHelper';
@@ -68,18 +69,6 @@ export const WhatsAppInstanceModal: React.FC<WhatsAppInstanceModalProps> = ({
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
   }, [waState, qrPayload]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.body.classList.add('modal-open');
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.classList.remove('modal-open');
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [onClose]);
 
   const handleSseEvent = (event: SseEvent) => {
     switch (event.type) {
@@ -155,129 +144,114 @@ export const WhatsAppInstanceModal: React.FC<WhatsAppInstanceModalProps> = ({
 
   const copy = statusCopy(waState, qrExpired);
 
+  const footer = (
+    <>
+      <div className="connection-modal__actions">
+        {waState !== 'open' ? (
+          <Button type="button" variant="primary" icon={RefreshCw} onClick={handleRequestNewQr}>
+            {qrExpired ? 'Gerar novo QR' : 'Atualizar QR'}
+          </Button>
+        ) : (
+          <Button type="button" variant="danger" icon={LogOut} onClick={handleConfirmDisconnect} disabled={disconnecting}>
+            Desconectar
+          </Button>
+        )}
+        <Button type="button" variant="secondary" icon={AlertTriangle} onClick={onDelete} className="connection-modal__danger">
+          Excluir Instância
+        </Button>
+      </div>
+      <p className="connection-modal__secure">
+        <Lock size={12} aria-hidden />
+        Seus dados estão protegidos com criptografia de ponta a ponta.
+      </p>
+    </>
+  );
+
   return (
-    <div
-      className="ui-modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="wa-modal-title"
-      onClick={onClose}
+    <ResponsiveModal
+      open
+      title="Conectar canal"
+      subtitle={instanceName}
+      onClose={onClose}
+      size="connection"
+      labelledById="connection-modal-title"
+      footer={footer}
     >
-      <div className="ui-modal ui-modal--sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="ui-modal__header">
-          <div style={{ minWidth: 0 }}>
-            <h2 id="wa-modal-title" className="ui-modal__title truncate">
-              Conectar Canal
-            </h2>
-            <p className="connect-sheet__subtitle truncate" title={instanceName}>
-              {instanceName}
-            </p>
-          </div>
-          <button type="button" className="ui-modal__close" onClick={onClose} aria-label="Fechar">
-            <X size={18} aria-hidden />
-          </button>
-        </div>
-
-        <div className="ui-modal__body">
-          <div className="connect-sheet">
-            <div className="connect-sheet__qr">
-              <div className={`connect-sheet__qr-box${waState === 'open' ? ' is-connected' : ''}`}>
-                {waState === 'open' ? (
-                  <CheckCircle2 size={64} style={{ color: 'var(--success)' }} aria-hidden />
-                ) : qrPayload ? (
-                  <img
-                    src={qrPayload}
-                    alt="QR Code para conectar o canal"
-                    style={{ filter: qrExpired ? 'blur(6px)' : 'none' }}
-                  />
-                ) : (
-                  <RefreshCw size={40} style={{ color: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} aria-hidden />
-                )}
-                {qrExpired && waState !== 'open' && (
-                  <div className="connect-sheet__qr-expired" role="status">
-                    <Clock size={28} style={{ color: 'var(--error)' }} aria-hidden />
-                    <strong>QR expirado</strong>
-                  </div>
-                )}
-              </div>
-
-              {waState === 'connecting' && !qrExpired && (
-                <span className="connect-sheet__timer">{qrSecondsLeft}s restantes</span>
-              )}
-            </div>
-
-            <div className="connect-sheet__form">
-              <div className="connect-sheet__status" role="status">
-                <strong>{copy.label}</strong>
-                <span>{copy.hint}</span>
-              </div>
-
-              <h3 className="connect-sheet__form-title">Mensagem de teste</h3>
-              {waState !== 'open' && (
-                <div className="connect-sheet__hint">Conecte o canal para enviar uma mensagem de teste.</div>
-              )}
-
-              <form
-                onSubmit={handleSendTestMessage}
-                className="connect-sheet__form-fields"
-                style={{
-                  opacity: waState === 'open' ? 1 : 0.55,
-                  pointerEvents: waState === 'open' ? 'auto' : 'none',
-                }}
-              >
-                <label className="input-label" htmlFor="test-phone">
-                  Telefone (com DDI)
-                </label>
-                <input
-                  id="test-phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="5511999990000"
-                  className="form-input"
-                  value={testPhone}
-                  onChange={(e) => setTestPhone(e.target.value)}
-                />
-                <label className="input-label" htmlFor="test-msg">
-                  Mensagem
-                </label>
-                <textarea
-                  id="test-msg"
-                  rows={3}
-                  className="form-input"
-                  value={testMessage}
-                  onChange={(e) => setTestMessage(e.target.value)}
-                />
-                <Button type="submit" variant="primary" icon={Send} isLoading={testSendingState === 'typing'} className="connect-sheet__submit">
-                  Enviar teste
-                </Button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <div className="ui-modal__footer">
-          <div className="connect-sheet__actions">
-            {waState !== 'open' ? (
-              <Button type="button" variant="primary" icon={RefreshCw} onClick={handleRequestNewQr}>
-                {qrExpired ? 'Gerar novo QR' : 'Atualizar QR'}
-              </Button>
+      <div className="connection-modal-content">
+        <div className="connection-modal__qr-col">
+          <div className={`qr-wrapper${waState === 'open' ? ' qr-wrapper--connected' : ''}`}>
+            {waState === 'open' ? (
+              <CheckCircle2 size={64} style={{ color: 'var(--success)' }} aria-hidden />
+            ) : qrPayload ? (
+              <img
+                src={qrPayload}
+                alt="QR Code para conectar o canal"
+                style={{ filter: qrExpired ? 'blur(6px)' : 'none' }}
+              />
             ) : (
-              <Button type="button" variant="danger" icon={LogOut} onClick={handleConfirmDisconnect} disabled={disconnecting}>
-                Desconectar
-              </Button>
+              <RefreshCw size={40} className="qr-wrapper__spinner" style={{ color: 'var(--primary)' }} aria-hidden />
             )}
-            <Button type="button" variant="secondary" icon={AlertTriangle} onClick={onDelete} className="connect-sheet__danger">
-              Excluir Instância
-            </Button>
+            {qrExpired && waState !== 'open' && (
+              <div className="qr-wrapper__expired" role="status">
+                <Clock size={28} style={{ color: 'var(--error)' }} aria-hidden />
+                <strong>QR expirado</strong>
+              </div>
+            )}
           </div>
-          <p className="connect-sheet__secure">
-            <Lock size={12} aria-hidden />
-            Seus dados estão protegidos com criptografia de ponta a ponta.
-          </p>
+          {waState === 'connecting' && !qrExpired && (
+            <span className="connection-modal__timer">{qrSecondsLeft}s restantes</span>
+          )}
+        </div>
+
+        <div className="connection-modal__form-col">
+          <div className="connection-modal__status" role="status">
+            <strong>{copy.label}</strong>
+            <span>{copy.hint}</span>
+          </div>
+
+          <h3 className="connection-modal__form-title">Mensagem de teste</h3>
+          {waState !== 'open' && (
+            <div className="connection-modal__hint">Conecte o canal para enviar uma mensagem de teste.</div>
+          )}
+
+          <form
+            onSubmit={handleSendTestMessage}
+            className="connection-modal__form"
+            style={{
+              opacity: waState === 'open' ? 1 : 0.55,
+              pointerEvents: waState === 'open' ? 'auto' : 'none',
+            }}
+          >
+            <label className="input-label" htmlFor="test-phone">
+              Telefone (com DDI)
+            </label>
+            <input
+              id="test-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="5511999990000"
+              className="form-input"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+            />
+            <label className="input-label" htmlFor="test-msg">
+              Mensagem
+            </label>
+            <textarea
+              id="test-msg"
+              rows={3}
+              className="form-input"
+              value={testMessage}
+              onChange={(e) => setTestMessage(e.target.value)}
+            />
+            <Button type="submit" variant="primary" icon={Send} isLoading={testSendingState === 'typing'} className="connection-modal__submit">
+              Enviar teste
+            </Button>
+          </form>
         </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

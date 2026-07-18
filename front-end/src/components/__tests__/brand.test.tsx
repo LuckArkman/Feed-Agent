@@ -15,28 +15,28 @@ vi.mock('@/utils/toastHelper', () => ({
 }));
 
 describe('Identidade ZapBusiness', () => {
-  it('exibe ZapBusiness no login com by LCM', () => {
+  it('exibe ZapBusiness no login sem by LCM no logo', () => {
     render(
       <MemoryRouter>
         <Login />
       </MemoryRouter>,
     );
-    expect(screen.getAllByLabelText(BRAND.signature).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(BRAND.productName).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Zap').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Business').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(`by ${BRAND.companyShort}`).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/^by LCM$/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: BRAND.loginCta })).toBeInTheDocument();
   });
 
-  it('copyright exibe LCM Enterprise com ano dinâmico e assinatura', () => {
+  it('copyright exibe LCM Enterprise com ano dinâmico', () => {
     render(<BrandCopyright />);
     const year = new Date().getFullYear();
     expect(screen.getByText(brandCopyright(year))).toBeInTheDocument();
-    expect(screen.getByText(BRAND.signature)).toBeInTheDocument();
+    expect(screen.queryByText(BRAND.signature)).not.toBeInTheDocument();
     expect(screen.getByText(new RegExp(BRAND.companyName))).toBeInTheDocument();
   });
 
-  it('credenciais de demonstração não aparecem no login (produção)', () => {
+  it('credenciais de demonstração não aparecem no login', () => {
     render(
       <MemoryRouter>
         <Login />

@@ -4,6 +4,7 @@ import { BRAND, brandCopyright } from '@/config/brand';
 interface BrandCopyrightProps {
   className?: string;
   showSolutionLine?: boolean;
+  /** Linha “ZapBusiness by LCM” — desligada por padrão (guia: só copyright LCM). */
   showSignature?: boolean;
   compact?: boolean;
 }
@@ -11,7 +12,7 @@ interface BrandCopyrightProps {
 export const BrandCopyright: React.FC<BrandCopyrightProps> = ({
   className = '',
   showSolutionLine = false,
-  showSignature = true,
+  showSignature = false,
   compact = false,
 }) => {
   const year = useMemo(() => new Date().getFullYear(), []);

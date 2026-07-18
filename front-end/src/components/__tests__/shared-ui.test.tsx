@@ -50,7 +50,7 @@ describe('ResponsiveModal', () => {
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Conteúdo do modal')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Fechar' }));
+    await user.click(screen.getByRole('button', { name: 'Fechar modal' }));
     expect(onClose).toHaveBeenCalled();
 
     onClose.mockClear();

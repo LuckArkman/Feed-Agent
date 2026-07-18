@@ -1,4 +1,4 @@
-# ZapBusiness by LCM — Frontend
+# ZapBusiness — Frontend
 
 Portal web do **ZapBusiness**, solução de comunicação empresarial da **LCM Enterprise Ltda.**
 

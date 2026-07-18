@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZapBusiness — fixture modal conexão</title>
+    <link rel="stylesheet" href="/src/index.css" />
+    <style>
+      body { margin: 0; background: #07111f; color: #f4f8fc; font-family: system-ui, sans-serif; }
+      .fixture-page { min-height: 200vh; padding: 24px; }
+    </style>
+  </head>
+  <body>
+    <div class="fixture-page">
+      <h1>Página longa (simula shell)</h1>
+      <p>Conteúdo atrás do modal.</p>
+    </div>
+
+    <div class="modal-overlay" data-testid="modal-overlay">
+      <section
+        class="modal-dialog modal-dialog--connection connection-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="connection-modal-title"
+        data-testid="modal-dialog"
+      >
+        <header class="modal-header" data-testid="modal-header">
+          <div class="modal-header__copy">
+            <h2 id="connection-modal-title" class="modal-title">Conectar canal</h2>
+            <p class="modal-subtitle">Dispositivo 1</p>
+          </div>
+          <button type="button" class="modal-close" aria-label="Fechar modal">×</button>
+        </header>
+        <div class="modal-body" data-testid="modal-body">
+          <div class="connection-modal-content">
+            <div class="connection-modal__qr-col">
+              <div class="qr-wrapper">
+                <div style="width:100%;aspect-ratio:1;background:#fff;border-radius:8px;"></div>
+              </div>
+              <span class="connection-modal__timer">58s restantes</span>
+            </div>
+            <div class="connection-modal__form-col">
+              <div class="connection-modal__status"><strong>Aguardando leitura</strong><span>Escaneie o QR.</span></div>
+              <h3 class="connection-modal__form-title">Mensagem de teste</h3>
+              <label>Telefone</label>
+              <input class="form-input" style="width:100%" />
+              <label>Mensagem</label>
+              <textarea class="form-input" rows="4" style="width:100%;min-height:88px"></textarea>
+              <button type="button" class="btn btn-primary" style="width:100%;min-height:44px">Enviar teste</button>
+              <div style="height:400px;opacity:0.3">spacer para forçar scroll interno</div>
+            </div>
+          </div>
+        </div>
+        <footer class="modal-footer" data-testid="modal-footer">
+          <div class="connection-modal__actions">
+            <button type="button" class="btn btn-primary" style="min-height:44px">Atualizar QR</button>
+            <button type="button" class="btn btn-secondary" style="min-height:44px">Excluir Instância</button>
+          </div>
+        </footer>
+      </section>
+    </div>
+  </body>
+</html>

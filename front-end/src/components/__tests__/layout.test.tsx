@@ -51,7 +51,7 @@ describe('MainLayout / Sidebar mobile', () => {
   it('renderiza layout autenticado com navegação e marca ZapBusiness', () => {
     renderLayout();
     expect(screen.getAllByLabelText('Navegação principal').length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(BRAND.signature).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(BRAND.productName).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/Menu da conta/)).toBeInTheDocument();
     expect(screen.getByText('Painel conteúdo')).toBeInTheDocument();
   });
@@ -75,6 +75,6 @@ describe('MainLayout / Sidebar mobile', () => {
     const user = userEvent.setup();
     renderLayout();
     await user.click(screen.getByRole('button', { name: /Recolher menu lateral/i }));
-    expect(screen.getAllByLabelText(BRAND.signature).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(BRAND.productName).length).toBeGreaterThan(0);
   });
 });
