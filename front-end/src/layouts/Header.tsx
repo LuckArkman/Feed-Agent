@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon, Wifi, Menu, ChevronDown, User, LogOut, Bell } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { useSseGateway } from '@/hooks/useSseGateway';
-import type { SseEvent } from '@/hooks/useSseGateway';
+
 import apiClient from '@/services/apiClient';
 
 interface HeaderProps {
@@ -25,24 +24,25 @@ export const Header: React.FC<HeaderProps> = ({
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-  const [waState, setWaState] = useState<'open' | 'connecting' | 'close' | 'banned'>('close');
+  const [connectedCount, setConnectedCount] = useState(0);
 
   useEffect(() => {
-    // Only fetch status if user is logged in
     if (user) {
-      apiClient.get('/whatsapp/status').then(res => {
-        if (res.data?.success) {
-          setWaState(res.data.data.state);
-        }
-      }).catch(() => {});
+      const fetchStatus = () => {
+        apiClient.get('/whatsapp/instances').then(res => {
+          if (res.data?.success) {
+            const instances = res.data.data;
+            const openCount = instances.filter((inst: any) => inst.liveStatus?.state === 'OPEN').length;
+            setConnectedCount(openCount);
+          }
+        }).catch(() => {});
+      };
+      
+      fetchStatus();
+      const interval = setInterval(fetchStatus, 15000);
+      return () => clearInterval(interval);
     }
   }, [user]);
-
-  useSseGateway((event: SseEvent) => {
-    if (event.type === 'connected') setWaState('open');
-    else if (event.type === 'qr' || event.type === 'qr:timeout') setWaState('connecting');
-    else if (event.type === 'disconnected') setWaState('close');
-  });
 
   const getFriendlyTitle = (path: string) => {
     switch (path) {
@@ -85,12 +85,12 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="header-right">
         {/* Status Connection Indicator */}
         <div className="header-status-badge" style={{ 
-            backgroundColor: waState === 'open' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-            borderColor: waState === 'open' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(234, 179, 8, 0.3)',
+            backgroundColor: connectedCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+            borderColor: connectedCount > 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(234, 179, 8, 0.3)',
         }}>
-          <Wifi size={14} className="status-icon-glow" style={{ color: waState === 'open' ? 'var(--success)' : '#eab308' }} />
-          <span className="status-text" style={{ color: waState === 'open' ? 'var(--success)' : '#eab308' }}>
-            {waState === 'open' ? 'WhatsApp Conectado' : 'WhatsApp Pendente'}
+          <Wifi size={14} className="status-icon-glow" style={{ color: connectedCount > 0 ? 'var(--success)' : '#eab308' }} />
+          <span className="status-text" style={{ color: connectedCount > 0 ? 'var(--success)' : '#eab308' }}>
+            {connectedCount > 0 ? `${connectedCount} Instância(s) Conectada(s)` : 'Sem Instâncias'}
           </span>
         </div>
 
