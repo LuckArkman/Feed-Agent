@@ -2,7 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { BookOpen, Search, ChevronDown, ChevronUp, Download, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
+import { BrandCopyright } from '@/components/BrandCopyright';
 import { showToast } from '@/utils/toastHelper';
+import { BRAND, NAV_LABELS } from '@/config/brand';
 
 interface FaqItem {
   id: string;
@@ -14,24 +16,22 @@ interface FaqItem {
 const FAQ_DATA: FaqItem[] = [
   {
     id: 'faq-1',
-    category: 'WhatsApp',
-    question: 'Como conectar o celular?',
-    answer:
-      'Abra WhatsApp → Aparelhos conectados → Conectar um aparelho. No Feed-Agent, vá em WhatsApp, abra a instância e escaneie o QR. O status chega em tempo real via SSE (Server-Sent Events).',
+    category: 'Conexão',
+    question: 'Como conectar o canal?',
+    answer: `Abra o aplicativo de mensagens no aparelho → Aparelhos conectados → Conectar um aparelho. No ${BRAND.productName}, vá em ${NAV_LABELS.whatsapp}, abra a instância e escaneie o QR. O status é atualizado em tempo real.`,
   },
   {
     id: 'faq-2',
-    category: 'Disparos',
-    question: 'Como reduzir risco de bloqueio?',
+    category: 'Campanhas',
+    question: 'Como operar envios com mais segurança?',
     answer:
-      'O backend envia com concorrência 1 e pausas aleatórias entre mensagens. Evite lotes enormes em números novos; mantenha a lista limpa (contatos inválidos são desativados automaticamente).',
+      'O sistema processa envios com cadência controlada e pausas entre mensagens. Prefira listas autorizadas e revisadas; contatos inválidos podem ser desativados automaticamente.',
   },
   {
     id: 'faq-3',
-    category: 'OCR & Minutas',
-    question: 'Como gerar uma minuta a partir de PDF ou imagem?',
-    answer:
-      'Em Leitor OCR, envie o arquivo. O servidor faz OCR (Tesseract) e gera a minuta com o modelo local. Revise em Minutas, aprove e dispare.',
+    category: 'Conteúdos',
+    question: 'Como preparar um conteúdo a partir de PDF ou imagem?',
+    answer: `Em ${NAV_LABELS.ocr}, envie o arquivo. O servidor extrai o texto e gera um rascunho. Revise em ${NAV_LABELS.drafts}, aprove e inicie a campanha.`,
   },
   {
     id: 'faq-4',
@@ -43,27 +43,26 @@ const FAQ_DATA: FaqItem[] = [
   {
     id: 'faq-5',
     category: 'Conta',
-    question: 'Onde altero tema e preferências?',
-    answer:
-      'Use o ícone de sol/lua no topo para o tema. Em Preferências você salva um apelido local neste navegador. Segredos de servidor (JWT, Redis) não são editados pelo painel.',
+    question: 'Onde altero tema e configurações?',
+    answer: `Use o ícone de sol/lua no topo para o tema. Em ${NAV_LABELS.settings} você salva um apelido local neste navegador. Segredos de servidor não são editados pelo painel.`,
   },
 ];
 
-const QUICK_GUIDE = `# Feed-Agent — guia rápido
+const QUICK_GUIDE = `# ${BRAND.signature} — guia rápido
 
 ## Fluxo
-1. Conectar WhatsApp (QR)
+1. Conectar canal (QR)
 2. Importar contatos (CSV)
-3. Gerar minuta (OCR)
-4. Revisar e aprovar em Minutas
-5. Acompanhar em Disparos
+3. Preparar conteúdo (leitor inteligente)
+4. Revisar e aprovar em Conteúdos
+5. Acompanhar em Campanhas
 
 ## Frontend
 - npm run dev
 - npm run build
 
 ## API
-Configure VITE_API_URL apontando para o backend (padrão http://localhost:3000/api).
+Configure VITE_API_URL apontando para o backend.
 `;
 
 export const HelpCenterPage: React.FC = () => {
@@ -86,7 +85,7 @@ export const HelpCenterPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'FeedAgent_Guia_Rapido.md';
+    link.download = 'ZapBusiness_Guia_Rapido.md';
     link.click();
     URL.revokeObjectURL(url);
     showToast.success('Guia baixado.');
@@ -97,10 +96,12 @@ export const HelpCenterPage: React.FC = () => {
       <div className="page-hero">
         <div className="page-hero-copy">
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BookOpen size={28} style={{ color: 'var(--primary)' }} />
-            Ajuda
+            <BookOpen size={28} style={{ color: 'var(--primary)' }} aria-hidden />
+            {NAV_LABELS.help}
           </h1>
-          <p>Perguntas frequentes do fluxo real: WhatsApp, OCR, minutas e disparos.</p>
+          <p>
+            Orientação para conexão, contatos, conteúdos e campanhas no {BRAND.productName}.
+          </p>
         </div>
         <Button variant="secondary" icon={Download} onClick={downloadGuide}>
           Baixar guia
@@ -111,6 +112,7 @@ export const HelpCenterPage: React.FC = () => {
         <div style={{ position: 'relative', maxWidth: 420 }}>
           <Search
             size={18}
+            aria-hidden
             style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
           />
           <input
@@ -119,6 +121,7 @@ export const HelpCenterPage: React.FC = () => {
             placeholder="Buscar no FAQ…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Buscar no FAQ"
           />
         </div>
       </div>
@@ -144,12 +147,12 @@ export const HelpCenterPage: React.FC = () => {
                   color: 'var(--text-main)',
                 }}
               >
-                <HelpCircle size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                <HelpCircle size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} aria-hidden />
                 <div style={{ flex: 1 }}>
                   <Badge variant="neutral">{item.category}</Badge>
                   <div style={{ marginTop: 6, fontWeight: 650, fontFamily: 'var(--font-heading)' }}>{item.question}</div>
                 </div>
-                {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                {open ? <ChevronUp size={18} aria-hidden /> : <ChevronDown size={18} aria-hidden />}
               </button>
               {open && (
                 <div style={{ padding: '0 18px 18px 48px', color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.55 }}>
@@ -165,6 +168,14 @@ export const HelpCenterPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <aside className="glass-panel brand-disclaimer" style={{ padding: 20 }}>
+        <h2 style={{ fontSize: 'var(--type-h3)', marginBottom: 8 }}>Sobre a integração</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.55, marginBottom: 12 }}>
+          {BRAND.integrationDisclaimer}
+        </p>
+        <BrandCopyright showSolutionLine />
+      </aside>
     </div>
   );
 };

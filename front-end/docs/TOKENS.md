@@ -1,4 +1,4 @@
-# Design tokens — Feed-Agent front-end
+# Design tokens — ZapBusiness front-end (LCM)
 
 Fonte canônica: `front-end/src/index.css` (`:root` e `[data-theme='dark']`).
 

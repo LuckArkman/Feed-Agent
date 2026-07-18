@@ -42,6 +42,7 @@ export const ApiKeysPage: React.FC = () => {
   const [selectedScopes, setSelectedScopes] = useState<string[]>(['READ_CONTACTS', 'WRITE_CONTACTS']);
   const [expirationRule, setExpirationRule] = useState<string>('NEVER');
 
+  // URL de exemplo legada (domínio histórico) — não altera contrato do endpoint relativo /news/external
   const webhookUrl = 'https://feedagent.com.br/api/v1/news/external';
   const webhookSecret = 'whsec_A89F90C12E4B889091AF88B3';
 

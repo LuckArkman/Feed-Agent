@@ -288,7 +288,7 @@ export const Contacts: React.FC = () => {
 
     const link = document.createElement('a');
     link.setAttribute('href', csvContent);
-    link.setAttribute('download', `contatos-feedagent-${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `contatos-zapbusiness-${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

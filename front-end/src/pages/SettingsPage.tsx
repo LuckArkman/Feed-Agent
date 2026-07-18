@@ -17,7 +17,7 @@ export const SettingsPage: React.FC = () => {
     localStorage.setItem('feedagent-display-hint', displayName.trim());
     setTimeout(() => {
       setSaving(false);
-      showToast.success('Preferências locais salvas neste navegador.');
+      showToast.success('Configurações locais salvas neste navegador.');
     }, 400);
   };
 
@@ -27,7 +27,7 @@ export const SettingsPage: React.FC = () => {
         <div className="page-hero-copy">
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Settings size={28} style={{ color: 'var(--primary)' }} />
-            Preferências
+            Configurações
           </h1>
           <p>
             Ajustes deste navegador. Infraestrutura (JWT, Redis, retenção) é configurada no servidor — não
@@ -66,7 +66,7 @@ export const SettingsPage: React.FC = () => {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button type="submit" variant="primary" icon={Save} isLoading={saving}>
-            Salvar preferências
+            Salvar configurações
           </Button>
         </div>
       </form>

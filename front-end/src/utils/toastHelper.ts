@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 /**
- * Robust notification wrappers aligning with Feed-Agent's Design System
+ * Robust notification wrappers aligning with ZapBusiness Design System
  */
 export const showToast = {
   success: (message: string) => {

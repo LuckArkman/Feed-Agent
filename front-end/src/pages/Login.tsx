@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, LogIn, MessageSquareCode } from 'lucide-react';
+import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { Button } from '@/components/Button';
 import { Alert } from '@/components/Alert';
+import { BrandMark } from '@/components/BrandMark';
+import { BrandCopyright } from '@/components/BrandCopyright';
 import { useAuthStore } from '@/store/authStore';
 import { showToast } from '@/utils/toastHelper';
 import apiClient from '@/services/apiClient';
+import { BRAND } from '@/config/brand';
 import '@/styles/login.css';
 
 export const Login: React.FC = () => {
@@ -14,11 +17,13 @@ export const Login: React.FC = () => {
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isPasswordValid = password.length >= 4;
+  const showDevHints = import.meta.env.DEV;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,36 +85,46 @@ export const Login: React.FC = () => {
     <div className="login-screen-bg">
       <div className="login-screen-inner">
         <aside className="login-brand-pane">
-          <div className="login-brand-mark">
-            <div className="mark-square">
-              <MessageSquareCode size={26} />
-            </div>
-            <span className="mark-name">Feed-Agent</span>
-          </div>
-          <h1>Do documento ao disparo, em um fluxo só.</h1>
-          <p>
-            Conecte o WhatsApp, gere minutas com OCR e IA, e envie para sua base com controle de fila.
-          </p>
-          <ul className="login-brand-steps">
+          <BrandMark className="login-brand-mark" />
+          <p className="login-brand-tagline">{BRAND.tagline}</p>
+          <h1>{BRAND.institutionalLine}</h1>
+          <p>{BRAND.solutionLine}</p>
+          <ul className="login-brand-steps" aria-label="Capacidades">
             <li>
-              <span className="step-num">1</span>
-              Conecte um aparelho
+              <span className="step-num" aria-hidden>
+                1
+              </span>
+              Contatos e listas organizadas
             </li>
             <li>
-              <span className="step-num">2</span>
-              Extraia texto e revise a minuta
+              <span className="step-num" aria-hidden>
+                2
+              </span>
+              Conteúdos revisados com controle
             </li>
             <li>
-              <span className="step-num">3</span>
-              Dispare com cadência segura
+              <span className="step-num" aria-hidden>
+                3
+              </span>
+              Campanhas com operação rastreável
             </li>
           </ul>
+          <div className="login-brand-abstract" aria-hidden>
+            <span className="abs-node" />
+            <span className="abs-line" />
+            <span className="abs-node abs-node--accent" />
+            <span className="abs-line" />
+            <span className="abs-node" />
+          </div>
         </aside>
 
         <div className="login-glass-card">
+          <div className="login-mobile-brand">
+            <BrandMark />
+          </div>
           <div className="login-card-heading">
             <h2>Entrar</h2>
-            <p>Use as credenciais da sua conta administradora.</p>
+            <p>Acesse sua conta {BRAND.productName}.</p>
           </div>
 
           {error && <Alert variant="error">{error}</Alert>}
@@ -126,7 +141,7 @@ export const Login: React.FC = () => {
                 disabled={loading}
                 autoComplete="email"
               />
-              <Mail size={18} className="floating-input-icon" />
+              <Mail size={18} className="floating-input-icon" aria-hidden />
               <span className="floating-label-text">E-mail</span>
               <span
                 className={`validation-dot-indicator ${
@@ -136,12 +151,13 @@ export const Login: React.FC = () => {
                       ? 'validation-dot-valid'
                       : 'validation-dot-invalid'
                 }`}
+                aria-hidden
               />
             </div>
 
             <div className="floating-input-group">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="login-password"
                 placeholder=" "
                 className="floating-input-box"
@@ -150,27 +166,21 @@ export const Login: React.FC = () => {
                 disabled={loading}
                 autoComplete="current-password"
               />
-              <Lock size={18} className="floating-input-icon" />
+              <Lock size={18} className="floating-input-icon" aria-hidden />
               <span className="floating-label-text">Senha</span>
-              <span
-                className={`validation-dot-indicator ${
-                  password === ''
-                    ? 'validation-dot-empty'
-                    : isPasswordValid
-                      ? 'validation-dot-valid'
-                      : 'validation-dot-invalid'
-                }`}
-              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                tabIndex={0}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+              </button>
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              icon={LogIn}
-              isLoading={loading}
-              style={{ width: '100%', marginTop: 8, height: 48 }}
-            >
-              Acessar painel
+            <Button type="submit" variant="primary" icon={LogIn} isLoading={loading} className="login-submit-btn">
+              {BRAND.loginCta}
             </Button>
           </form>
 
@@ -182,6 +192,14 @@ export const Login: React.FC = () => {
               Ainda não tem conta? <Link to="/register">Criar administrador</Link>
             </span>
           </div>
+
+          {showDevHints && (
+            <p className="login-dev-hint" data-testid="login-dev-hint">
+              Ambiente de desenvolvimento — use as credenciais locais configuradas no backend.
+            </p>
+          )}
+
+          <BrandCopyright className="login-copyright" showSolutionLine />
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { MainLayout } from '@/layouts/MainLayout';
 import { useAuthStore } from '@/store/authStore';
+import { BRAND } from '@/config/brand';
 
 vi.mock('@/services/apiClient', () => {
   const client = {
@@ -47,9 +48,10 @@ describe('MainLayout / Sidebar mobile', () => {
     });
   });
 
-  it('renderiza layout autenticado com navegação', () => {
+  it('renderiza layout autenticado com navegação e marca ZapBusiness', () => {
     renderLayout();
     expect(screen.getAllByLabelText('Navegação principal').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(BRAND.signature).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/Menu da conta/)).toBeInTheDocument();
     expect(screen.getByText('Painel conteúdo')).toBeInTheDocument();
   });
@@ -64,8 +66,15 @@ describe('MainLayout / Sidebar mobile', () => {
     expect(screen.queryByRole('dialog', { name: /Menu de navegação/i })).not.toBeInTheDocument();
   });
 
-  it('exibe status do WhatsApp no header', () => {
+  it('exibe status do canal de forma acessível', () => {
     renderLayout();
-    expect(screen.getByLabelText(/WhatsApp|conectado/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Canal|conectado|desconectado|Conectando/i)).toBeInTheDocument();
+  });
+
+  it('menu recolhido mantém nome acessível da marca', async () => {
+    const user = userEvent.setup();
+    renderLayout();
+    await user.click(screen.getByRole('button', { name: /Recolher menu lateral/i }));
+    expect(screen.getAllByLabelText(BRAND.signature).length).toBeGreaterThan(0);
   });
 });

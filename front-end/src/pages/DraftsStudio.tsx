@@ -545,7 +545,7 @@ export const DraftsStudio: React.FC = () => {
               </div>
 
               <div style={{ padding: '14px', borderRadius: '8px', backgroundColor: 'color-mix(in srgb, var(--border) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--border) 40%, transparent)', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                ⚠️ <strong>Atenção:</strong> Ao confirmar, o Feed-Agent registrará a aprovação e injetará os pacotes diretamente no gerenciador de filas do WhatsApp Hub.
+                ⚠️ <strong>Atenção:</strong> Ao confirmar, o ZapBusiness registrará a aprovação e injetará os pacotes diretamente no gerenciador de filas do WhatsApp Hub.
               </div>
             </div>
 
@@ -747,7 +747,7 @@ export const DraftsStudio: React.FC = () => {
 
                 <div style={{ marginTop: 'auto', padding: '16px', borderRadius: '8px', backgroundColor: 'color-mix(in srgb, var(--info) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--info) 20%, transparent)' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--info)', lineHeight: 1.4, display: 'block' }}>
-                    💡 <strong>Proteção Ativa:</strong> O Feed-Agent inspeciona a árvore em tempo real. Estruturas JSON corrompidas ou malformadas são automaticamente bloqueadas de entrar no banco de dados.
+                    💡 <strong>Proteção Ativa:</strong> O ZapBusiness inspeciona a árvore em tempo real. Estruturas JSON corrompidas ou malformadas são automaticamente bloqueadas de entrar no banco de dados.
                   </span>
                 </div>
               </div>
@@ -1104,7 +1104,7 @@ export const DraftsStudio: React.FC = () => {
                         FA
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Canal Feed-Agent</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Canal ZapBusiness</span>
                         <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)' }}>bot oficial de disparos</span>
                       </div>
                     </div>
@@ -1196,12 +1196,12 @@ export const DraftsStudio: React.FC = () => {
         <div className="page-hero-copy">
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Kanban size={28} style={{ color: 'var(--primary)' }} />
-            Minutas
+            Conteúdos
           </h1>
-          <p>Revise, aprove ou rejeite rascunhos antes do disparo.</p>
+          <p>Revise, aprove ou rejeite conteúdos antes de iniciar a campanha.</p>
         </div>
         <Button type="button" variant="primary" icon={Plus} onClick={handleOpenCreateModal}>
-          Nova minuta
+          Novo conteúdo
         </Button>
       </div>
 

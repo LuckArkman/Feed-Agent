@@ -1,28 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
-  --font-sans: 'Source Sans 3', system-ui, sans-serif;
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-mono: 'Source Sans 3', ui-monospace, monospace;
+  /* LCM raw palette (canonical) */
+  --lcm-navy-950: #07111f;
+  --lcm-navy-900: #0d2137;
+  --lcm-navy-850: #102840;
+  --lcm-blue-700: #00649f;
+  --lcm-blue-600: #0072b8;
+  --lcm-blue-500: #0086d1;
+  --lcm-cyan-500: #00aeef;
+  --lcm-cyan-400: #28c5f5;
+  --lcm-surface-1: #0e1b2d;
+  --lcm-surface-2: #142338;
+  --lcm-surface-3: #192b43;
+  --lcm-border: rgba(137, 177, 215, 0.16);
+  --lcm-text-primary: #f4f8fc;
+  --lcm-text-secondary: #9eb1c7;
+  --lcm-text-muted: #71859d;
 
-  /* Signal Desk — teal ink on cool paper (not purple / not cream-terracotta) */
-  --primary: #0d7377;
-  --primary-hover: #095c5f;
-  --primary-alpha: rgba(13, 115, 119, 0.12);
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'Plus Jakarta Sans', ui-monospace, monospace;
+
+  /* Light theme — LCM corporate paper */
+  --primary: var(--lcm-blue-600);
+  --primary-hover: var(--lcm-blue-700);
+  --primary-alpha: rgba(0, 114, 184, 0.14);
   --primary-ink: #ffffff;
+  --accent: var(--lcm-cyan-500);
 
-  --background: #e8ecf0;
-  --surface: #fafbfc;
+  --background: #eef3f8;
+  --surface: #f7fafc;
   --surface-raised: #ffffff;
-  --text-main: #12181f;
-  --text-muted: #5a6570;
-  --text-disabled: #8a949e;
-  --border: #d0d7de;
+  --text-main: #0d2137;
+  --text-muted: #4a5f78;
+  --text-disabled: #8a9bb0;
+  --border: rgba(13, 33, 55, 0.12);
 
   --success: #1a7f4b;
   --error: #c62828;
   --warning: #b78103;
-  --info: #2563a8;
+  --info: var(--lcm-blue-500);
 
   --focus-ring: 0 0 0 3px var(--primary-alpha);
   --modal-width-sm: 420px;
@@ -32,12 +50,20 @@
 
   --panel-bg: var(--surface-raised);
   --panel-border: var(--border);
-  --panel-shadow: 0 1px 2px rgba(18, 24, 31, 0.04);
+  --panel-shadow: 0 1px 2px rgba(7, 17, 31, 0.05);
 
-  --shadow-sm: 0 1px 2px rgba(18, 24, 31, 0.05);
-  --shadow-md: 0 4px 12px rgba(18, 24, 31, 0.06);
-  --shadow-lg: 0 12px 28px rgba(18, 24, 31, 0.08);
+  --shadow-sm: 0 1px 2px rgba(7, 17, 31, 0.05);
+  --shadow-md: 0 4px 14px rgba(7, 17, 31, 0.07);
+  --shadow-lg: 0 12px 28px rgba(7, 17, 31, 0.1);
   --shadow-glow: none;
+
+  --type-display: clamp(1.75rem, 2.4vw, 2.25rem);
+  --type-h1: 1.5rem;
+  --type-h2: 1.25rem;
+  --type-h3: 1.05rem;
+  --type-body: 0.95rem;
+  --type-small: 0.85rem;
+  --type-caption: 0.75rem;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -79,23 +105,25 @@
 }
 
 [data-theme='dark'] {
-  --primary: #2bb3b8;
-  --primary-hover: #3fc4c8;
-  --primary-alpha: rgba(43, 179, 184, 0.16);
-  --primary-ink: #061214;
+  /* LCM premium dark — identidade principal */
+  --primary: var(--lcm-blue-500);
+  --primary-hover: var(--lcm-cyan-400);
+  --primary-alpha: rgba(0, 174, 239, 0.18);
+  --primary-ink: #07111f;
+  --accent: var(--lcm-cyan-500);
 
-  --background: #0b1220;
-  --surface: #111a2b;
-  --surface-raised: #152033;
-  --text-main: #e8eef4;
-  --text-muted: #8b9aab;
-  --text-disabled: #5c6b7a;
-  --border: #243044;
+  --background: var(--lcm-navy-950);
+  --surface: var(--lcm-surface-1);
+  --surface-raised: var(--lcm-surface-2);
+  --text-main: var(--lcm-text-primary);
+  --text-muted: var(--lcm-text-secondary);
+  --text-disabled: var(--lcm-text-muted);
+  --border: var(--lcm-border);
 
   --success: #3dba74;
-  --error: #f07178;
+  --error: #e85a5a;
   --warning: #e6b84d;
-  --info: #5b9fd4;
+  --info: var(--lcm-cyan-400);
 
   --panel-bg: var(--surface-raised);
   --panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -703,11 +731,135 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 8px 20px;
-  margin-bottom: 8px;
+  padding: 4px 8px 18px;
+  margin-bottom: 10px;
   border-bottom: 1px solid var(--border);
   overflow: hidden;
   white-space: nowrap;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.brand-mark:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-md);
+}
+
+.brand-mark__symbol {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: block;
+  border-radius: var(--radius-md);
+}
+
+.brand-mark__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.brand-mark__name {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.brand-mark__by {
+  font-size: var(--type-caption);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.brand-mark--compact .brand-mark__symbol {
+  margin-inline: auto;
+}
+
+.brand-copyright {
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  line-height: 1.4;
+}
+
+.brand-copyright__solution {
+  margin: 0 0 4px;
+}
+
+.brand-copyright__line {
+  margin: 0;
+}
+
+.brand-copyright--compact {
+  padding: 0 4px 10px;
+}
+
+.sidebar-copyright {
+  margin-bottom: 8px;
+}
+
+.sidebar-copyright-short {
+  display: block;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.status-text--short {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .status-text--full {
+    display: none;
+  }
+  .status-text--short {
+    display: inline;
+  }
+}
+
+.brand-splash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-splash__symbol {
+  width: 40px;
+  height: 40px;
+  animation: brand-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-splash__symbol {
+    animation: none;
+  }
+}
+
+@keyframes brand-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
 }
 
 .brand-logo {

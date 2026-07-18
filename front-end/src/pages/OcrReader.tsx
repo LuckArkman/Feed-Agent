@@ -735,9 +735,9 @@ A minuta foi salva automaticamente e está aguardando aprovação no quadro Kanb
         <div className="page-hero-copy">
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <FileUp size={28} style={{ color: 'var(--primary)' }} />
-            Leitor OCR
+            Leitor inteligente
           </h1>
-          <p>Envie PDF ou imagem; o servidor extrai o texto e gera a minuta com o modelo local.</p>
+          <p>Envie PDF ou imagem; prepare o conteúdo com extração inteligente de texto.</p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {queue.length > 0 && (

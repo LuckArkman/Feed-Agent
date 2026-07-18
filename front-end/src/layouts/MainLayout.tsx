@@ -11,7 +11,7 @@ export const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [theme, setTheme] = React.useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('feedagent-theme');
-    return (saved as 'light' | 'dark') || 'light';
+    return (saved as 'light' | 'dark') || 'dark';
   });
   const overlayRef = useRef<HTMLDivElement>(null);
 

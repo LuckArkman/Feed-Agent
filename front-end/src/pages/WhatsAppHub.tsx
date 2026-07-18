@@ -100,8 +100,8 @@ export const WhatsAppHub: React.FC = () => {
 
       <div className="page-hero">
         <div className="page-hero-copy">
-          <h1>Instâncias WhatsApp</h1>
-          <p>Conecte aparelhos via QR e gerencie o status ao vivo de cada sessão.</p>
+          <h1>Conexão</h1>
+          <p>Conecte o canal via QR e acompanhe o status ao vivo de cada sessão.</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <Button variant="secondary" icon={RefreshCw} onClick={fetchInstances} isLoading={loading}>

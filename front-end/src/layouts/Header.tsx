@@ -3,24 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon, Wifi, Menu, ChevronDown, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/services/apiClient';
+import { BRAND, PAGE_TITLES } from '@/config/brand';
 
 interface HeaderProps {
   onMenuClick: () => void;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
 }
-
-const titles: Record<string, string> = {
-  '/dashboard': 'Painel',
-  '/whatsapp': 'WhatsApp',
-  '/contacts': 'Contatos',
-  '/ocr': 'Leitor OCR',
-  '/drafts': 'Minutas',
-  '/broadcast': 'Disparos',
-  '/profile': 'Perfil',
-  '/settings': 'Preferências',
-  '/help': 'Ajuda',
-};
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggle }) => {
   const navigate = useNavigate();
@@ -31,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [connectedCount, setConnectedCount] = useState(0);
+  const [statusLoading, setStatusLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -46,7 +36,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
             setConnectedCount(openCount);
           }
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setStatusLoading(false));
     };
     fetchStatus();
     const interval = setInterval(fetchStatus, 15000);
@@ -83,7 +74,20 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const statusLabel = connectedCount > 0 ? `${connectedCount} conectado(s)` : 'Sem WhatsApp';
+  const pageTitle = PAGE_TITLES[location.pathname] || BRAND.productName;
+
+  let statusShort = 'Desconectado';
+  let statusLong = 'Canal desconectado';
+  if (statusLoading) {
+    statusShort = 'Conectando';
+    statusLong = 'Conectando canal';
+  } else if (connectedCount > 0) {
+    statusShort = 'Conectado';
+    statusLong =
+      connectedCount === 1
+        ? 'Canal WhatsApp conectado'
+        : `${connectedCount} canais WhatsApp conectados`;
+  }
 
   return (
     <header className="app-header">
@@ -91,30 +95,36 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, theme, onThemeToggl
         <button type="button" className="mobile-menu-btn" onClick={onMenuClick} aria-label="Abrir menu de navegação">
           <Menu size={20} aria-hidden />
         </button>
-        <p className="header-page-title" title={titles[location.pathname] || 'Feed-Agent'}>
-          {titles[location.pathname] || 'Feed-Agent'}
+        <p className="header-page-title" title={pageTitle}>
+          {pageTitle}
         </p>
       </div>
 
       <div className="header-right">
         <div
           className="header-status-badge"
-          title={statusLabel}
-          aria-label={statusLabel}
+          title={statusLong}
+          aria-label={statusLong}
+          data-connected={connectedCount > 0 ? 'true' : 'false'}
           style={{
             backgroundColor:
               connectedCount > 0
                 ? 'color-mix(in srgb, var(--success) 12%, transparent)'
-                : 'color-mix(in srgb, var(--warning) 14%, transparent)',
+                : statusLoading
+                  ? 'color-mix(in srgb, var(--info) 14%, transparent)'
+                  : 'color-mix(in srgb, var(--warning) 14%, transparent)',
             borderColor:
               connectedCount > 0
                 ? 'color-mix(in srgb, var(--success) 28%, transparent)'
-                : 'color-mix(in srgb, var(--warning) 30%, transparent)',
-            color: connectedCount > 0 ? 'var(--success)' : 'var(--warning)',
+                : statusLoading
+                  ? 'color-mix(in srgb, var(--info) 28%, transparent)'
+                  : 'color-mix(in srgb, var(--warning) 30%, transparent)',
+            color: connectedCount > 0 ? 'var(--success)' : statusLoading ? 'var(--info)' : 'var(--warning)',
           }}
         >
           <Wifi size={14} className="status-icon-glow" aria-hidden />
-          <span className="status-text">{statusLabel}</span>
+          <span className="status-text status-text--full">{statusLong}</span>
+          <span className="status-text status-text--short">{statusShort}</span>
         </div>
 
         <button

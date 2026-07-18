@@ -301,7 +301,7 @@ export const BroadcastQueue: React.FC = () => {
         <div className="page-hero-copy">
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Activity size={28} style={{ color: 'var(--primary)' }} />
-            Disparos
+            Campanhas
           </h1>
           <p>Acompanhe a fila, o progresso do lote e o histórico de envios.</p>
         </div>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-hidden="true">
+  <!-- Identidade provisória  substituir por símbolo oficial LCM -->
+  <rect width="48" height="48" rx="12" fill="#0072B8"/>
+  <path d="M14 16h20l-12 8 12 8H14" stroke="#F4F8FC" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="34" cy="16" r="2.2" fill="#00AEEF"/>
+  <circle cx="34" cy="32" r="2.2" fill="#28C5F5"/>
+</svg>

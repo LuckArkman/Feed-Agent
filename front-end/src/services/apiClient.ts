@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-// Standard response wrapper type for Feed-Agent API
+// Standard response wrapper type for ZapBusiness API (compatível com backend legado)
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data: T;
