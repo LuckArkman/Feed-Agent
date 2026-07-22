@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Brand build temporários
+src/assets/brand/_*
+scripts/compare-zb.mjs
+scripts/trace-zb-ref.mjs
+scripts/generate-brand-assets.mjs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

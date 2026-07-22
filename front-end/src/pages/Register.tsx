@@ -1,38 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
+import axios from 'axios';
 import { Button } from '@/components/Button';
 import { Alert } from '@/components/Alert';
 import { showToast } from '@/utils/toastHelper';
+import { getPasswordStrength } from '@/utils/passwordStrength';
 import apiClient from '@/services/apiClient';
 import '@/styles/login.css';
-
-// Password strength calculation utility
-export const getPasswordStrength = (pass: string): { score: number; text: string; color: string } => {
-  let score = 0;
-  if (!pass) return { score, text: 'Vazio', color: 'var(--text-muted)' };
-  
-  if (pass.length >= 6) score++;
-  if (/[A-Z]/.test(pass)) score++;
-  if (/[a-z]/.test(pass)) score++;
-  if (/[0-9]/.test(pass)) score++;
-  if (/[^A-Za-z0-9]/.test(pass)) score++;
-  
-  const texts = ['Muito Fraca', 'Fraca', 'Média', 'Forte', 'Excelente'];
-  const colors = [
-    'rgba(239, 68, 68, 0.4)',  // Red
-    'var(--error)',             // Stronger red
-    '#eab308',                  // Yellow
-    '#3b82f6',                  // Blue
-    'var(--success)',           // Green
-  ];
-
-  return { 
-    score, 
-    text: texts[score - 1] || 'Muito Fraca',
-    color: colors[score - 1] || 'var(--error)'
-  };
-};
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -92,8 +67,10 @@ export const Register: React.FC = () => {
         setError(msg);
         showToast.error(msg);
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'Erro ao criar nova credencial administrativa.';
+    } catch (err: unknown) {
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data as { error?: string } | undefined)?.error || 'Erro ao criar nova credencial administrativa.'
+        : 'Erro ao criar nova credencial administrativa.';
       setError(errorMsg);
       showToast.error(errorMsg);
     } finally {
@@ -103,29 +80,11 @@ export const Register: React.FC = () => {
 
   return (
     <div className="login-screen-bg">
-      <div className="login-glass-card" style={{ maxWidth: '500px' }}>
-        {/* Brand Header */}
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            backgroundColor: 'var(--primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-glow)',
-          }}>
-            <UserPlus size={30} style={{ color: 'white' }} />
-          </div>
-          <div>
-            <h2 style={{ fontSize: '1.85rem', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'white' }}>
-              Novo Administrador
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Cadastre suas credenciais de segurança do sistema
-            </p>
-          </div>
+      <div className="login-screen-inner" style={{ gridTemplateColumns: '1fr', placeContent: 'center', padding: 24 }}>
+      <div className="login-glass-card" style={{ maxWidth: 460, margin: '0 auto' }}>
+        <div className="login-card-heading">
+          <h2>Criar administrador</h2>
+          <p>Cadastre a conta que gerencia contatos, minutas e disparos.</p>
         </div>
 
         {/* Error Notification */}
@@ -276,13 +235,12 @@ export const Register: React.FC = () => {
           </Button>
         </form>
 
-        {/* Back to Login Option */}
-        <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          Já possui registro?{' '}
-          <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
-            Acessar Painel
-          </Link>
+        <div className="login-footer-links">
+          <span>
+            Já tem conta? <Link to="/login">Entrar</Link>
+          </span>
         </div>
+      </div>
       </div>
     </div>
   );
